@@ -76,26 +76,45 @@ function Dashboard({ personal }) {
 
         <div className="dashboard-card">
           <h3>Preventiva vs Vial</h3>
-          <div className="bar-chart">
-            <div className="bar-item">
-              <span className="bar-label">Preventiva</span>
-              <div className="bar-track">
-                <div
-                  className="bar-fill bar-fill-preventiva"
-                  style={{ width: `${(totalPreventiva / personal.length) * 100}%` }}
-                ></div>
+          <div className="pie-chart-container">
+            <div className="pie-chart">
+              <svg viewBox="0 0 200 200" className="pie-svg">
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="80"
+                  fill="none"
+                  stroke="var(--azul-claro)"
+                  strokeWidth="40"
+                />
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="80"
+                  fill="none"
+                  stroke="var(--azul-medio)"
+                  strokeWidth="40"
+                  strokeDasharray={`${(totalPreventiva / personal.length) * 502.65} 502.65`}
+                  strokeDashoffset="0"
+                  transform="rotate(-90 100 100)"
+                />
+              </svg>
+              <div className="pie-center">
+                <span className="pie-total">{personal.length}</span>
+                <span className="pie-total-label">Total</span>
               </div>
-              <span className="bar-value">{totalPreventiva}</span>
             </div>
-            <div className="bar-item">
-              <span className="bar-label">Vial</span>
-              <div className="bar-track">
-                <div
-                  className="bar-fill bar-fill-vial"
-                  style={{ width: `${(totalViales / personal.length) * 100}%` }}
-                ></div>
+            <div className="pie-legend">
+              <div className="pie-legend-item">
+                <span className="pie-dot" style={{ background: "var(--azul-medio)" }}></span>
+                <span className="pie-legend-text">Preventiva</span>
+                <span className="pie-legend-value">{totalPreventiva}</span>
               </div>
-              <span className="bar-value">{totalViales}</span>
+              <div className="pie-legend-item">
+                <span className="pie-dot" style={{ background: "var(--azul-claro)" }}></span>
+                <span className="pie-legend-text">Vial</span>
+                <span className="pie-legend-value">{totalViales}</span>
+              </div>
             </div>
           </div>
         </div>
