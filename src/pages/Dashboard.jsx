@@ -1,4 +1,4 @@
-import { Users, Shield, TrafficCone } from "lucide-react";
+import { Users } from "lucide-react";
 
 function Dashboard({ personal }) {
   const totalPolicias = personal.filter((p) => p.categoria === "Policía").length;
@@ -9,27 +9,18 @@ function Dashboard({ personal }) {
       <h1 className="page-title">Panel de Control</h1>
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: "#111844" }}>
-            <Users size={28} color="#fff" />
-          </div>
           <div className="stat-info">
             <span className="stat-number">{personal.length}</span>
             <span className="stat-label">Total Personal</span>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: "#4B5694" }}>
-            <Shield size={28} color="#fff" />
-          </div>
           <div className="stat-info">
             <span className="stat-number">{totalPolicias}</span>
             <span className="stat-label">Policías</span>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: "#7288AE" }}>
-            <TrafficCone size={28} color="#fff" />
-          </div>
           <div className="stat-info">
             <span className="stat-number">{totalViales}</span>
             <span className="stat-label">Viales</span>
