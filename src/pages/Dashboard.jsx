@@ -73,6 +73,32 @@ function Dashboard({ personal }) {
               ))}
           </div>
         </div>
+
+        <div className="dashboard-card">
+          <h3>Preventiva vs Vial</h3>
+          <div className="bar-chart">
+            <div className="bar-item">
+              <span className="bar-label">Preventiva</span>
+              <div className="bar-track">
+                <div
+                  className="bar-fill bar-fill-preventiva"
+                  style={{ width: `${(totalPreventiva / personal.length) * 100}%` }}
+                ></div>
+              </div>
+              <span className="bar-value">{totalPreventiva}</span>
+            </div>
+            <div className="bar-item">
+              <span className="bar-label">Vial</span>
+              <div className="bar-track">
+                <div
+                  className="bar-fill bar-fill-vial"
+                  style={{ width: `${(totalViales / personal.length) * 100}%` }}
+                ></div>
+              </div>
+              <span className="bar-value">{totalViales}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
