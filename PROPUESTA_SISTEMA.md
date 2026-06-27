@@ -55,6 +55,11 @@ Se instala directamente en la computadora designada, como cualquier otro program
 **Acceso:**
 - El programa pide usuario y contraseña para entrar
 - Solo personas autorizadas pueden usar el sistema
+- Se pueden crear diferentes niveles de acceso (por ejemplo: administrador con acceso total, y consulta solo para ver información sin poder modificarla)
+- Después de 3 intentos fallidos de contraseña, el acceso se bloquea temporalmente
+- La sesión se cierra automáticamente si no se usa el programa por un tiempo prolongado (ej. 15 minutos)
+- Las contraseñas se almacenan de forma cifrada (no se guardan tal cual, nadie puede leerlas directamente)
+- Se lleva un registro interno de quién entró al sistema y a qué hora (bitácora de acceso)
 
 **Respaldos (copias de seguridad):**
 - Botón dentro del programa para generar un respaldo en cualquier momento
