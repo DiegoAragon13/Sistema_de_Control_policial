@@ -490,7 +490,7 @@ body {
 
 .pie-segment {
   cursor: pointer;
-  transition: stroke-width 0.2s ease;
+  transition: opacity 0.2s ease, stroke 0.2s ease;
 }
 
 .pie-center {

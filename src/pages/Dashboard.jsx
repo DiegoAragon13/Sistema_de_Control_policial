@@ -95,9 +95,10 @@ function Dashboard({ personal }) {
                   cy="100"
                   r="80"
                   fill="none"
-                  stroke="var(--azul-claro)"
-                  strokeWidth={hovered === "vial" ? 46 : 40}
+                  stroke={hovered === "vial" ? "#5a7499" : "var(--azul-claro)"}
+                  strokeWidth="40"
                   className="pie-segment"
+                  opacity={hovered === "preventiva" ? 0.5 : 1}
                   onMouseEnter={() => setHovered("vial")}
                   onMouseLeave={() => setHovered(null)}
                 />
@@ -106,12 +107,13 @@ function Dashboard({ personal }) {
                   cy="100"
                   r="80"
                   fill="none"
-                  stroke="var(--azul-medio)"
-                  strokeWidth={hovered === "preventiva" ? 46 : 40}
+                  stroke={hovered === "preventiva" ? "#3a4578" : "var(--azul-medio)"}
+                  strokeWidth="40"
                   strokeDasharray={`${(totalPreventiva / personal.length) * 502.65} 502.65`}
                   strokeDashoffset="0"
                   transform="rotate(-90 100 100)"
                   className="pie-segment"
+                  opacity={hovered === "vial" ? 0.5 : 1}
                   onMouseEnter={() => setHovered("preventiva")}
                   onMouseLeave={() => setHovered(null)}
                 />
