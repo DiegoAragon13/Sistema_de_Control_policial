@@ -11,14 +11,6 @@ function Dashboard({ personal }) {
     }, 0) / personal.length
   ).toFixed(1);
 
-  // Distribución por tipo de sangre
-  const tiposSangre = {};
-  personal.forEach((p) => {
-    tiposSangre[p.tipo_sangre] = (tiposSangre[p.tipo_sangre] || 0) + 1;
-  });
-  const tiposSangreArr = Object.entries(tiposSangre)
-    .sort((a, b) => b[1] - a[1]);
-
   // Distribución por escolaridad
   const escolaridades = {};
   personal.forEach((p) => {
@@ -88,44 +80,6 @@ function Dashboard({ personal }) {
         </div>
 
         <div className="dashboard-card">
-          <h3>Tipo de Sangre</h3>
-          <div className="zone-list">
-            {tiposSangreArr.map(([tipo, count]) => (
-              <div key={tipo} className="zone-item">
-                <span className="zone-name">{tipo}</span>
-                <div className="zone-bar-container">
-                  <div
-                    className="zone-bar"
-                    style={{ width: `${(count / personal.length) * 100}%` }}
-                  ></div>
-                </div>
-                <span className="zone-count">{count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="dashboard-sections" style={{ marginTop: "24px" }}>
-        <div className="dashboard-card">
-          <h3>Escolaridad</h3>
-          <div className="zone-list">
-            {escolaridadesArr.map(([esc, count]) => (
-              <div key={esc} className="zone-item">
-                <span className="zone-name">{esc}</span>
-                <div className="zone-bar-container">
-                  <div
-                    className="zone-bar"
-                    style={{ width: `${(count / personal.length) * 100}%` }}
-                  ></div>
-                </div>
-                <span className="zone-count">{count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="dashboard-card">
           <h3>Mayor Antigüedad</h3>
           <div className="recent-list">
             {personal
@@ -150,6 +104,26 @@ function Dashboard({ personal }) {
                   </div>
                 );
               })}
+          </div>
+        </div>
+      </div>
+
+      <div className="dashboard-sections" style={{ marginTop: "24px" }}>
+        <div className="dashboard-card">
+          <h3>Escolaridad</h3>
+          <div className="zone-list">
+            {escolaridadesArr.map(([esc, count]) => (
+              <div key={esc} className="zone-item">
+                <span className="zone-name">{esc}</span>
+                <div className="zone-bar-container">
+                  <div
+                    className="zone-bar"
+                    style={{ width: `${(count / personal.length) * 100}%` }}
+                  ></div>
+                </div>
+                <span className="zone-count">{count}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
