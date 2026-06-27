@@ -153,14 +153,6 @@ function FichaPersona({ personal, setPersonal }) {
                 </select>
               </div>
               <div className="form-group">
-                <label>Asignación</label>
-                <select name="asignacion" value={form.asignacion || ""} onChange={handleChange}>
-                  <option value="">Seleccionar...</option>
-                  <option value="Policía Preventiva">Policía Preventiva</option>
-                  <option value="Vialidad">Vialidad</option>
-                </select>
-              </div>
-              <div className="form-group">
                 <label>Fecha de Ingreso</label>
                 <input type="date" name="fecha_ingreso" value={form.fecha_ingreso || ""} onChange={handleChange} />
               </div>

@@ -84,7 +84,6 @@ function Personal({ personal }) {
               <th>Nombre</th>
               <th>Categoría</th>
               <th>No. Empleado</th>
-              <th>Asignación</th>
               <th>Teléfono</th>
               <th>Fecha Ingreso</th>
             </tr>
@@ -106,14 +105,13 @@ function Personal({ personal }) {
                   </span>
                 </td>
                 <td>{p.numero_empleado}</td>
-                <td>{p.asignacion}</td>
                 <td>{p.telefono}</td>
                 <td>{p.fecha_ingreso}</td>
               </tr>
             ))}
             {paginados.length === 0 && (
               <tr>
-                <td colSpan="7" className="empty-state">
+                <td colSpan="6" className="empty-state">
                   No se encontraron registros.
                 </td>
               </tr>

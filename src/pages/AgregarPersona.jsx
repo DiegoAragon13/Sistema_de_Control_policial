@@ -4,7 +4,6 @@ import { Save, ArrowLeft, User, Upload } from "lucide-react";
 
 const initialForm = {
   categoria: "Preventiva",
-  asignacion: "",
   nombre: "",
   apellidos: "",
   direccion: "",
@@ -133,14 +132,6 @@ function AgregarPersona({ personal, setPersonal }) {
                 <select name="categoria" value={form.categoria} onChange={handleChange}>
                   <option value="Preventiva">Preventiva</option>
                   <option value="Vial">Vial</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Asignación</label>
-                <select name="asignacion" value={form.asignacion} onChange={handleChange}>
-                  <option value="">Seleccionar...</option>
-                  <option value="Policía Preventiva">Policía Preventiva</option>
-                  <option value="Vialidad">Vialidad</option>
                 </select>
               </div>
               <div className="form-group">

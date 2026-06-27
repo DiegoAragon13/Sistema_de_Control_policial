@@ -5,12 +5,6 @@ function Dashboard({ personal }) {
   const totalViales = personal.filter((p) => p.categoria === "Vial").length;
   const anioActual = new Date().getFullYear();
   const ingresosEsteAnio = personal.filter((p) => new Date(p.fecha_ingreso).getFullYear() === anioActual).length;
-  const corporaciones = [...new Set(personal.map((p) => p.asignacion))];
-
-  const porCorporacion = corporaciones.map((corp) => ({
-    corp,
-    total: personal.filter((p) => p.asignacion === corp).length,
-  }));
 
   return (
     <div className="dashboard">
@@ -40,7 +34,7 @@ function Dashboard({ personal }) {
           </div>
           <div className="stat-info">
             <span className="stat-number">{totalViales}</span>
-            <span className="stat-label">Viales</span>
+            <span className="stat-label">Vial</span>
           </div>
         </div>
         <div className="stat-card">
@@ -56,26 +50,9 @@ function Dashboard({ personal }) {
 
       <div className="dashboard-sections">
         <div className="dashboard-card">
-          <h3>Distribución por Corporación</h3>
-          <div className="zone-list">
-            {porCorporacion.map((item) => (
-              <div key={item.corp} className="zone-item">
-                <span className="zone-name">{item.corp}</span>
-                <div className="zone-bar-container">
-                  <div
-                    className="zone-bar"
-                    style={{ width: `${(item.total / personal.length) * 100}%` }}
-                  ></div>
-                </div>
-                <span className="zone-count">{item.total}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="dashboard-card">
           <h3>Ingresos Recientes</h3>
           <div className="recent-list">
-            {personal
+            {[...personal]
               .sort((a, b) => new Date(b.fecha_ingreso) - new Date(a.fecha_ingreso))
               .slice(0, 5)
               .map((p) => (

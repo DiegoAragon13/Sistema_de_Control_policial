@@ -55,7 +55,6 @@ Se instala directamente en la computadora designada, como cualquier otro program
 **Acceso:**
 - El programa pide usuario y contraseña para entrar
 - Solo personas autorizadas pueden usar el sistema
-- La contraseña de acceso caduca automáticamente cada cierto tiempo (por ejemplo cada 30 días) y el sistema obliga a cambiarla por una nueva
 - Después de 3 intentos fallidos de contraseña, el acceso se bloquea temporalmente
 - La sesión se cierra automáticamente si no se usa el programa por un tiempo prolongado (ej. 15 minutos)
 - Las contraseñas se almacenan de forma cifrada (no se guardan tal cual, nadie puede leerlas directamente)
