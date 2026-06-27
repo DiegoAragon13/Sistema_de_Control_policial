@@ -406,13 +406,12 @@ body {
 .stat-card {
   background: var(--blanco);
   border-radius: var(--radius);
-  padding: 28px 24px;
+  padding: 24px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 16px;
   box-shadow: var(--shadow);
   transition: var(--transition);
-  border-left: 4px solid var(--azul-medio);
 }
 
 .stat-card:hover {
@@ -432,7 +431,6 @@ body {
 .stat-info {
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 
 .stat-number {
