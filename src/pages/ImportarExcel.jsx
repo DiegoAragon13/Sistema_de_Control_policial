@@ -27,7 +27,7 @@ function ImportarExcel() {
       setResultado({
         exito: true,
         mensaje: "Se importaron 18 registros correctamente.",
-        detalles: "12 Policías y 6 Viales agregados al sistema.",
+        detalles: "12 Preventiva y 6 Viales agregados al sistema.",
       });
       setArchivo(null);
     }, 1500);

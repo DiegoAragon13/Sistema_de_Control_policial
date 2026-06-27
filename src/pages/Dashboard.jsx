@@ -1,7 +1,7 @@
 import { Users, Shield, TrafficCone } from "lucide-react";
 
 function Dashboard({ personal }) {
-  const totalPolicias = personal.filter((p) => p.categoria === "Policía").length;
+  const totalPolicias = personal.filter((p) => p.categoria === "Preventiva").length;
   const totalViales = personal.filter((p) => p.categoria === "Vial").length;
 
   // Calcular antigüedad promedio en años
@@ -44,7 +44,7 @@ function Dashboard({ personal }) {
           </div>
           <div className="stat-info">
             <span className="stat-number">{totalPolicias}</span>
-            <span className="stat-label">Policías</span>
+            <span className="stat-label">Preventiva</span>
           </div>
         </div>
         <div className="stat-card">

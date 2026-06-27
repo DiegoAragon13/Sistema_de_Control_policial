@@ -5,7 +5,7 @@ const mockPersonal = [
   {
     id: 1,
     foto: null,
-    categoria: "Policía",
+    categoria: "Preventiva",
     asignacion: "Policía Preventiva",
     nombre: "Carlos",
     apellidos: "Hernández López",
@@ -24,7 +24,7 @@ const mockPersonal = [
   {
     id: 2,
     foto: null,
-    categoria: "Policía",
+    categoria: "Preventiva",
     asignacion: "Policía Preventiva",
     nombre: "María Elena",
     apellidos: "García Rodríguez",
@@ -62,7 +62,7 @@ const mockPersonal = [
   {
     id: 4,
     foto: null,
-    categoria: "Policía",
+    categoria: "Preventiva",
     asignacion: "Policía Preventiva",
     nombre: "Jorge Luis",
     apellidos: "Pérez Domínguez",
@@ -100,7 +100,7 @@ const mockPersonal = [
   {
     id: 6,
     foto: null,
-    categoria: "Policía",
+    categoria: "Preventiva",
     asignacion: "Policía Preventiva",
     nombre: "Miguel Ángel",
     apellidos: "Torres Vega",
@@ -138,7 +138,7 @@ const mockPersonal = [
   {
     id: 8,
     foto: null,
-    categoria: "Policía",
+    categoria: "Preventiva",
     asignacion: "Policía Preventiva",
     nombre: "Francisco",
     apellidos: "Díaz Morales",
@@ -176,7 +176,7 @@ const mockPersonal = [
   {
     id: 10,
     foto: null,
-    categoria: "Policía",
+    categoria: "Preventiva",
     asignacion: "Policía Preventiva",
     nombre: "Raúl",
     apellidos: "Mendoza Aguilar",
@@ -214,7 +214,7 @@ const mockPersonal = [
   {
     id: 12,
     foto: null,
-    categoria: "Policía",
+    categoria: "Preventiva",
     asignacion: "Policía Preventiva",
     nombre: "Andrés",
     apellidos: "Salazar Ruiz",
@@ -252,7 +252,7 @@ const mockPersonal = [
   {
     id: 14,
     foto: null,
-    categoria: "Policía",
+    categoria: "Preventiva",
     asignacion: "Policía Preventiva",
     nombre: "Héctor",
     apellidos: "Navarro Estrada",
@@ -290,7 +290,7 @@ const mockPersonal = [
   {
     id: 16,
     foto: null,
-    categoria: "Policía",
+    categoria: "Preventiva",
     asignacion: "Policía Preventiva",
     nombre: "Eduardo",
     apellidos: "Flores Quintana",
@@ -309,7 +309,7 @@ const mockPersonal = [
   {
     id: 17,
     foto: null,
-    categoria: "Policía",
+    categoria: "Preventiva",
     asignacion: "Policía Preventiva",
     nombre: "Alejandra",
     apellidos: "Bustamante Ríos",

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Save, ArrowLeft, User, Upload } from "lucide-react";
 
 const initialForm = {
-  categoria: "Policía",
+  categoria: "Preventiva",
   asignacion: "",
   nombre: "",
   apellidos: "",
@@ -131,7 +131,7 @@ function AgregarPersona({ personal, setPersonal }) {
               <div className="form-group">
                 <label>Categoría</label>
                 <select name="categoria" value={form.categoria} onChange={handleChange}>
-                  <option value="Policía">Policía</option>
+                  <option value="Preventiva">Preventiva</option>
                   <option value="Vial">Vial</option>
                 </select>
               </div>

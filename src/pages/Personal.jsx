@@ -49,7 +49,7 @@ function Personal({ personal }) {
 
       <div className="filters-bar">
         <div className="tabs-filter">
-          {["Todos", "Policía", "Vial"].map((cat) => (
+          {["Todos", "Preventiva", "Vial"].map((cat) => (
             <button
               key={cat}
               className={`tab-btn ${filtroCategoria === cat ? "active" : ""}`}
@@ -58,7 +58,7 @@ function Personal({ personal }) {
                 setPaginaActual(1);
               }}
             >
-              {cat === "Todos" ? "Todos" : cat === "Policía" ? "Preventiva" : "Vial"}
+              {cat}
             </button>
           ))}
         </div>
@@ -101,7 +101,7 @@ function Personal({ personal }) {
                   {p.nombre} {p.apellidos}
                 </td>
                 <td>
-                  <span className={`badge ${p.categoria === "Policía" ? "badge-policia" : "badge-vial"}`}>
+                  <span className={`badge ${p.categoria === "Preventiva" ? "badge-policia" : "badge-vial"}`}>
                     {p.categoria}
                   </span>
                 </td>

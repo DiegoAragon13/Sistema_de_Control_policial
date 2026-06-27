@@ -90,7 +90,7 @@ function FichaPersona({ personal, setPersonal }) {
             <input type="file" accept="image/*" onChange={handleFoto} hidden />
           </label>
           <div className="ficha-badge-container">
-            <span className={`badge ${form.categoria === "Policía" ? "badge-policia" : "badge-vial"}`}>
+            <span className={`badge ${form.categoria === "Preventiva" ? "badge-policia" : "badge-vial"}`}>
               {form.categoria}
             </span>
             <span className="ficha-employee-number">{form.numero_empleado}</span>
@@ -148,7 +148,7 @@ function FichaPersona({ personal, setPersonal }) {
               <div className="form-group">
                 <label>Categoría</label>
                 <select name="categoria" value={form.categoria || ""} onChange={handleChange}>
-                  <option value="Policía">Policía</option>
+                  <option value="Preventiva">Preventiva</option>
                   <option value="Vial">Vial</option>
                 </select>
               </div>
