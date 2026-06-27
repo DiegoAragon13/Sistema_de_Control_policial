@@ -1,14 +1,8 @@
-import { Users, Shield, TrafficCone, MapPin } from "lucide-react";
+import { Users, Shield, TrafficCone } from "lucide-react";
 
 function Dashboard({ personal }) {
   const totalPolicias = personal.filter((p) => p.categoria === "Policía").length;
   const totalViales = personal.filter((p) => p.categoria === "Vial").length;
-  const sectores = [...new Set(personal.map((p) => p.asignacion))];
-
-  const porSector = sectores.map((sector) => ({
-    sector,
-    total: personal.filter((p) => p.asignacion === sector).length,
-  }));
 
   return (
     <div className="dashboard">
@@ -41,35 +35,9 @@ function Dashboard({ personal }) {
             <span className="stat-label">Viales</span>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: "#111844" }}>
-            <MapPin size={28} color="#fff" />
-          </div>
-          <div className="stat-info">
-            <span className="stat-number">{sectores.length}</span>
-            <span className="stat-label">Corporaciones</span>
-          </div>
-        </div>
       </div>
 
       <div className="dashboard-sections">
-        <div className="dashboard-card">
-          <h3>Distribución por Corporación</h3>
-          <div className="zone-list">
-            {porSector.map((item) => (
-              <div key={item.sector} className="zone-item">
-                <span className="zone-name">{item.sector}</span>
-                <div className="zone-bar-container">
-                  <div
-                    className="zone-bar"
-                    style={{ width: `${(item.total / personal.length) * 100}%` }}
-                  ></div>
-                </div>
-                <span className="zone-count">{item.total}</span>
-              </div>
-            ))}
-          </div>
-        </div>
         <div className="dashboard-card">
           <h3>Ingresos Recientes</h3>
           <div className="recent-list">
