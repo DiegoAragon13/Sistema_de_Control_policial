@@ -58,7 +58,7 @@ function Personal({ personal }) {
                 setPaginaActual(1);
               }}
             >
-              {cat === "Todos" ? "Todos" : cat === "Policía" ? "Policías" : "Viales"}
+              {cat === "Todos" ? "Todos" : cat === "Policía" ? "Preventiva" : "Vial"}
             </button>
           ))}
         </div>
