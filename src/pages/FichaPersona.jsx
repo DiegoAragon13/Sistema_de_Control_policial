@@ -1,20 +1,54 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, Trash2, Upload, User } from "lucide-react";
+import { useFormSubmit } from "../hooks/useFormSubmit";
+import * as personalService from "../services/personalService";
 
-function FichaPersona({ personal, setPersonal }) {
+function FichaPersona({ personal, refreshPersonal }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const persona = personal.find((p) => p.id === parseInt(id));
 
   const [form, setForm] = useState(persona || {});
-  const [saving, setSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [fotoPreview, setFotoPreview] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (persona) setForm(persona);
   }, [persona]);
+
+  // --- Double-click-safe save via useFormSubmit ---
+  const saveHandler = useCallback(
+    async (data) => {
+      await personalService.update(data.id, data);
+    },
+    []
+  );
+
+  const { isSubmitting: saving, error: saveError, handleSubmit: handleGuardar } = useFormSubmit(
+    saveHandler,
+    {
+      onSuccess: () => {
+        refreshPersonal();
+        navigate("/personal");
+      },
+    }
+  );
+
+  // --- Double-click-safe delete ---
+  const handleEliminar = useCallback(async () => {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      await personalService.remove(persona.id);
+      await refreshPersonal();
+      setShowDeleteModal(false);
+      navigate("/personal");
+    } catch {
+      setDeleting(false);
+    }
+  }, [deleting, persona, refreshPersonal, navigate]);
 
   if (!persona) {
     return (
@@ -40,54 +74,50 @@ function FichaPersona({ personal, setPersonal }) {
     }
   };
 
-  const handleGuardar = () => {
-    setSaving(true);
-    setTimeout(() => {
-      setPersonal(personal.map((p) => (p.id === form.id ? { ...form } : p)));
-      setSaving(false);
-      navigate("/personal");
-    }, 800);
-  };
-
-  const handleEliminar = () => {
-    setPersonal(personal.filter((p) => p.id !== persona.id));
-    setShowDeleteModal(false);
-    navigate("/personal");
-  };
-
   return (
     <div className="ficha-page">
       <div className="ficha-header-row">
         <button className="btn-ghost" onClick={() => navigate("/personal")}>
-          <ArrowLeft size={18} />
+          <ArrowLeft size={18} aria-hidden="true" />
           Volver
         </button>
         <div className="ficha-actions">
           <button className="btn-danger" onClick={() => setShowDeleteModal(true)}>
-            <Trash2 size={16} />
+            <Trash2 size={16} aria-hidden="true" />
             Eliminar
           </button>
-          <button className="btn-primary" onClick={handleGuardar} disabled={saving}>
-            {saving ? <span className="spinner-inline"></span> : <><Save size={16} /> Guardar</>}
+          <button
+            className="btn-primary"
+            onClick={() => handleGuardar(form)}
+            disabled={saving}
+            aria-busy={saving}
+          >
+            {saving ? <span className="spinner-inline"></span> : <><Save size={16} aria-hidden="true" /> Guardar</>}
           </button>
         </div>
       </div>
+
+      {saveError && (
+        <div role="alert" style={{ color: "var(--rojo)", marginBottom: "16px", fontWeight: 600 }}>
+          {saveError}
+        </div>
+      )}
 
       <div className="ficha-content">
         <div className="ficha-sidebar">
           <div className="ficha-foto-container">
             {fotoPreview ? (
-              <img src={fotoPreview} alt="Foto" className="ficha-foto" />
+              <img src={fotoPreview} alt={`Foto de ${form.nombre}`} className="ficha-foto" />
             ) : (
               <div className="ficha-foto-placeholder">
-                <User size={64} />
+                <User size={64} aria-hidden="true" />
               </div>
             )}
           </div>
           <label className="btn-secondary btn-upload">
-            <Upload size={16} />
+            <Upload size={16} aria-hidden="true" />
             Cargar Foto
-            <input type="file" accept="image/*" onChange={handleFoto} hidden />
+            <input type="file" accept="image/*" onChange={handleFoto} hidden aria-label="Seleccionar fotografía" />
           </label>
           <div className="ficha-badge-container">
             <span className={`badge ${form.categoria === "Preventiva" ? "badge-policia" : "badge-vial"}`}>
@@ -104,40 +134,40 @@ function FichaPersona({ personal, setPersonal }) {
             <h3>Datos Personales</h3>
             <div className="form-grid">
               <div className="form-group">
-                <label>Nombre</label>
-                <input name="nombre" value={form.nombre || ""} onChange={handleChange} />
+                <label htmlFor="edit-nombre">Nombre</label>
+                <input id="edit-nombre" name="nombre" value={form.nombre || ""} onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label>Apellidos</label>
-                <input name="apellidos" value={form.apellidos || ""} onChange={handleChange} />
+                <label htmlFor="edit-apellidos">Apellidos</label>
+                <input id="edit-apellidos" name="apellidos" value={form.apellidos || ""} onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label>Fecha de Nacimiento</label>
-                <input type="date" name="fecha_nacimiento" value={form.fecha_nacimiento || ""} onChange={handleChange} />
+                <label htmlFor="edit-fecha_nacimiento">Fecha de Nacimiento</label>
+                <input id="edit-fecha_nacimiento" type="date" name="fecha_nacimiento" value={form.fecha_nacimiento || ""} onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label>Tipo de Sangre</label>
-                <select name="tipo_sangre" value={form.tipo_sangre || ""} onChange={handleChange}>
+                <label htmlFor="edit-tipo_sangre">Tipo de Sangre</label>
+                <select id="edit-tipo_sangre" name="tipo_sangre" value={form.tipo_sangre || ""} onChange={handleChange}>
                   {["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"].map((t) => (
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
               </div>
               <div className="form-group">
-                <label>Dirección</label>
-                <input name="direccion" value={form.direccion || ""} onChange={handleChange} />
+                <label htmlFor="edit-direccion">Dirección</label>
+                <input id="edit-direccion" name="direccion" value={form.direccion || ""} onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label>Teléfono</label>
-                <input name="telefono" value={form.telefono || ""} onChange={handleChange} />
+                <label htmlFor="edit-telefono">Teléfono</label>
+                <input id="edit-telefono" name="telefono" value={form.telefono || ""} onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label>Teléfono de Emergencia</label>
-                <input name="telefono_emergencia" value={form.telefono_emergencia || ""} onChange={handleChange} />
+                <label htmlFor="edit-telefono_emergencia">Teléfono de Emergencia</label>
+                <input id="edit-telefono_emergencia" name="telefono_emergencia" value={form.telefono_emergencia || ""} onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label>Escolaridad</label>
-                <input name="escolaridad" value={form.escolaridad || ""} onChange={handleChange} />
+                <label htmlFor="edit-escolaridad">Escolaridad</label>
+                <input id="edit-escolaridad" name="escolaridad" value={form.escolaridad || ""} onChange={handleChange} />
               </div>
             </div>
           </div>
@@ -146,19 +176,19 @@ function FichaPersona({ personal, setPersonal }) {
             <h3>Datos Laborales</h3>
             <div className="form-grid">
               <div className="form-group">
-                <label>Categoría</label>
-                <select name="categoria" value={form.categoria || ""} onChange={handleChange}>
+                <label htmlFor="edit-categoria">Categoría</label>
+                <select id="edit-categoria" name="categoria" value={form.categoria || ""} onChange={handleChange}>
                   <option value="Preventiva">Preventiva</option>
                   <option value="Vial">Vial</option>
                 </select>
               </div>
               <div className="form-group">
-                <label>Fecha de Ingreso</label>
-                <input type="date" name="fecha_ingreso" value={form.fecha_ingreso || ""} onChange={handleChange} />
+                <label htmlFor="edit-fecha_ingreso">Fecha de Ingreso</label>
+                <input id="edit-fecha_ingreso" type="date" name="fecha_ingreso" value={form.fecha_ingreso || ""} onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label>Número de Empleado</label>
-                <input name="numero_empleado" value={form.numero_empleado || ""} onChange={handleChange} />
+                <label htmlFor="edit-numero_empleado">Número de Empleado</label>
+                <input id="edit-numero_empleado" name="numero_empleado" value={form.numero_empleado || ""} onChange={handleChange} />
               </div>
             </div>
           </div>
@@ -167,16 +197,16 @@ function FichaPersona({ personal, setPersonal }) {
             <h3>Documentos de Identidad</h3>
             <div className="form-grid">
               <div className="form-group">
-                <label>RFC</label>
-                <input name="rfc" value={form.rfc || ""} onChange={handleChange} />
+                <label htmlFor="edit-rfc">RFC</label>
+                <input id="edit-rfc" name="rfc" value={form.rfc || ""} onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label>CURP</label>
-                <input name="curp" value={form.curp || ""} onChange={handleChange} />
+                <label htmlFor="edit-curp">CURP</label>
+                <input id="edit-curp" name="curp" value={form.curp || ""} onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label>CUIP</label>
-                <input name="cuip" value={form.cuip || ""} onChange={handleChange} placeholder={form.categoria === "Vial" ? "No aplica" : ""} />
+                <label htmlFor="edit-cuip">CUIP</label>
+                <input id="edit-cuip" name="cuip" value={form.cuip || ""} onChange={handleChange} placeholder={form.categoria === "Vial" ? "No aplica" : ""} />
               </div>
             </div>
           </div>
@@ -185,13 +215,23 @@ function FichaPersona({ personal, setPersonal }) {
 
       {/* Modal de confirmación de eliminación */}
       {showDeleteModal && (
-        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>¿Estás seguro?</h3>
+        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)} role="presentation">
+          <div
+            className="modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-modal-title"
+          >
+            <h3 id="delete-modal-title">¿Estás seguro?</h3>
             <p>Se eliminará el registro de <strong>{persona.nombre} {persona.apellidos}</strong>. Esta acción no se puede deshacer.</p>
             <div className="modal-actions">
-              <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>Cancelar</button>
-              <button className="btn-danger" onClick={handleEliminar}>Sí, eliminar</button>
+              <button className="btn-secondary" onClick={() => setShowDeleteModal(false)} disabled={deleting}>
+                Cancelar
+              </button>
+              <button className="btn-danger" onClick={handleEliminar} disabled={deleting} aria-busy={deleting}>
+                {deleting ? <span className="spinner-inline"></span> : "Sí, eliminar"}
+              </button>
             </div>
           </div>
         </div>

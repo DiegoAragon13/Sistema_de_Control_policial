@@ -1,21 +1,61 @@
 import { Users, Shield, TrafficCone, CalendarPlus } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
-function Dashboard({ personal }) {
-  const totalPreventiva = personal.filter((p) => p.categoria === "Preventiva").length;
-  const totalViales = personal.filter((p) => p.categoria === "Vial").length;
-  const anioActual = new Date().getFullYear();
-  const ingresosEsteAnio = personal.filter((p) => new Date(p.fecha_ingreso).getFullYear() === anioActual).length;
+function Dashboard({ personal, loading }) {
   const [hovered, setHovered] = useState(null);
 
-  const pctPreventiva = ((totalPreventiva / personal.length) * 100).toFixed(0);
-  const pctVial = ((totalViales / personal.length) * 100).toFixed(0);
+  // Memoize all computed values to prevent recalculation on every render/hover
+  const totalPreventiva = useMemo(
+    () => personal.filter((p) => p.categoria === "Preventiva").length,
+    [personal]
+  );
 
-  const centerLabel = hovered === "preventiva"
-    ? { value: totalPreventiva, label: "Preventiva", pct: `${pctPreventiva}%` }
-    : hovered === "vial"
-    ? { value: totalViales, label: "Vial", pct: `${pctVial}%` }
-    : { value: personal.length, label: "Total", pct: "" };
+  const totalViales = useMemo(
+    () => personal.filter((p) => p.categoria === "Vial").length,
+    [personal]
+  );
+
+  const anioActual = useMemo(() => new Date().getFullYear(), []);
+
+  const ingresosEsteAnio = useMemo(
+    () => personal.filter((p) => new Date(p.fecha_ingreso).getFullYear() === anioActual).length,
+    [personal, anioActual]
+  );
+
+  const pctPreventiva = useMemo(
+    () => (personal.length > 0 ? ((totalPreventiva / personal.length) * 100).toFixed(0) : "0"),
+    [totalPreventiva, personal.length]
+  );
+
+  const pctVial = useMemo(
+    () => (personal.length > 0 ? ((totalViales / personal.length) * 100).toFixed(0) : "0"),
+    [totalViales, personal.length]
+  );
+
+  const recientes = useMemo(
+    () =>
+      [...personal]
+        .sort((a, b) => new Date(b.fecha_ingreso) - new Date(a.fecha_ingreso))
+        .slice(0, 5),
+    [personal]
+  );
+
+  // This one depends on hover state but is cheap — no need to memoize
+  const centerLabel =
+    hovered === "preventiva"
+      ? { value: totalPreventiva, label: "Preventiva", pct: `${pctPreventiva}%` }
+      : hovered === "vial"
+      ? { value: totalViales, label: "Vial", pct: `${pctVial}%` }
+      : { value: personal.length, label: "Total", pct: "" };
+
+  if (loading) {
+    return (
+      <div className="dashboard">
+        <h1 className="page-title">Panel de Control</h1>
+        <p style={{ color: "var(--gris-texto)" }}>Cargando datos...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard">
@@ -23,7 +63,7 @@ function Dashboard({ personal }) {
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon" style={{ background: "#111844" }}>
-            <Users size={28} color="#fff" />
+            <Users size={28} color="#fff" aria-hidden="true" />
           </div>
           <div className="stat-info">
             <span className="stat-number">{personal.length}</span>
@@ -32,7 +72,7 @@ function Dashboard({ personal }) {
         </div>
         <div className="stat-card">
           <div className="stat-icon" style={{ background: "#4B5694" }}>
-            <Shield size={28} color="#fff" />
+            <Shield size={28} color="#fff" aria-hidden="true" />
           </div>
           <div className="stat-info">
             <span className="stat-number">{totalPreventiva}</span>
@@ -41,7 +81,7 @@ function Dashboard({ personal }) {
         </div>
         <div className="stat-card">
           <div className="stat-icon" style={{ background: "#7288AE" }}>
-            <TrafficCone size={28} color="#fff" />
+            <TrafficCone size={28} color="#fff" aria-hidden="true" />
           </div>
           <div className="stat-info">
             <span className="stat-number">{totalViales}</span>
@@ -50,7 +90,7 @@ function Dashboard({ personal }) {
         </div>
         <div className="stat-card">
           <div className="stat-icon" style={{ background: "#111844" }}>
-            <CalendarPlus size={28} color="#fff" />
+            <CalendarPlus size={28} color="#fff" aria-hidden="true" />
           </div>
           <div className="stat-info">
             <span className="stat-number">{ingresosEsteAnio}</span>
@@ -63,33 +103,30 @@ function Dashboard({ personal }) {
         <div className="dashboard-card">
           <h3>Ingresos Recientes</h3>
           <div className="recent-list">
-            {[...personal]
-              .sort((a, b) => new Date(b.fecha_ingreso) - new Date(a.fecha_ingreso))
-              .slice(0, 5)
-              .map((p) => (
-                <div key={p.id} className="recent-item">
-                  <div className="recent-avatar">
-                    {p.nombre.charAt(0)}
-                    {p.apellidos.charAt(0)}
-                  </div>
-                  <div className="recent-info">
-                    <span className="recent-name">
-                      {p.nombre} {p.apellidos}
-                    </span>
-                    <span className="recent-meta">
-                      {p.categoria} · {p.fecha_ingreso}
-                    </span>
-                  </div>
+            {recientes.map((p) => (
+              <div key={p.id} className="recent-item">
+                <div className="recent-avatar">
+                  {p.nombre.charAt(0)}
+                  {p.apellidos.charAt(0)}
                 </div>
-              ))}
+                <div className="recent-info">
+                  <span className="recent-name">
+                    {p.nombre} {p.apellidos}
+                  </span>
+                  <span className="recent-meta">
+                    {p.categoria} · {p.fecha_ingreso}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="dashboard-card">
           <h3>Preventiva vs Vial</h3>
           <div className="pie-chart-container">
-            <div className="pie-chart">
-              <svg viewBox="0 0 200 200" className="pie-svg">
+            <div className="pie-chart" role="img" aria-label={`Distribución: ${totalPreventiva} Preventiva (${pctPreventiva}%), ${totalViales} Vial (${pctVial}%)`}>
+              <svg viewBox="0 0 200 200" className="pie-svg" aria-hidden="true">
                 <circle
                   cx="100"
                   cy="100"
@@ -109,7 +146,7 @@ function Dashboard({ personal }) {
                   fill="none"
                   stroke={hovered === "preventiva" ? "#3a4578" : "var(--azul-medio)"}
                   strokeWidth="40"
-                  strokeDasharray={`${(totalPreventiva / personal.length) * 502.65} 502.65`}
+                  strokeDasharray={`${personal.length > 0 ? (totalPreventiva / personal.length) * 502.65 : 0} 502.65`}
                   strokeDashoffset="0"
                   transform="rotate(-90 100 100)"
                   className="pie-segment"
