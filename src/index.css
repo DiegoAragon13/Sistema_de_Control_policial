@@ -1462,3 +1462,198 @@ body {
   color: rgba(255, 255, 255, 0.45);
   letter-spacing: 0.3px;
 }
+
+/* ===========================
+   BAJAS — Estilos para el sistema de bajas
+   =========================== */
+
+/* Fila de baja en la tabla */
+.row-baja {
+  background: rgba(239, 68, 68, 0.04) !important;
+  color: #7f1d1d;
+}
+
+.row-baja:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+.row-baja .td-name {
+  color: #991b1b;
+}
+
+.avatar-baja {
+  background: linear-gradient(135deg, #fecaca, #fca5a5) !important;
+  color: #7f1d1d !important;
+}
+
+.td-nota-baja {
+  font-weight: 400;
+  color: #b91c1c;
+  font-size: 0.80rem;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Badge de baja */
+.badge-baja {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Badge activo */
+.badge-activo {
+  background: rgba(16, 185, 129, 0.1);
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Ficha con baja — borde rojo sutil */
+.ficha-baja {
+  border: 1.5px solid rgba(239, 68, 68, 0.3) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.06), var(--shadow) !important;
+}
+
+/* Banner de baja en la ficha */
+.baja-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  color: #991b1b;
+  font-size: 0.9rem;
+}
+
+.baja-banner strong {
+  font-weight: 700;
+}
+
+/* Botón de reactivar */
+.btn-reactivar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  background: linear-gradient(135deg, var(--verde), #059669);
+  color: var(--blanco);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.btn-reactivar:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+}
+
+.btn-reactivar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Textarea para nota de baja */
+.textarea-baja {
+  width: 100%;
+  padding: 11px 16px;
+  border: 1.5px solid var(--gris-borde);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--negro);
+  font-family: inherit;
+  resize: vertical;
+  transition: var(--transition);
+  background: var(--blanco);
+  line-height: 1.6;
+}
+
+.textarea-baja:focus {
+  outline: none;
+  border-color: var(--rojo);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
+}
+
+/* Tabs de estado activo/baja */
+.estado-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.estado-tab {
+  padding: 8px 18px;
+  border: 1.5px solid var(--gris-borde);
+  background: var(--blanco);
+  border-radius: var(--radius-sm);
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--gris-texto);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+}
+
+.estado-tab:hover {
+  border-color: var(--azul-medio);
+  color: var(--azul-medio);
+}
+
+.estado-tab.active {
+  background: linear-gradient(135deg, var(--azul-medio), #3d4a8a);
+  color: var(--blanco);
+  border-color: transparent;
+  box-shadow: 0 2px 6px rgba(75, 86, 148, 0.3);
+}
+
+.estado-tab.tab-baja.active {
+  background: linear-gradient(135deg, var(--rojo), #dc2626);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+}
+
+/* Label opcional en formularios */
+.label-optional {
+  font-weight: 400;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+
+/* Alert de error inline */
+.alert-error {
+  color: var(--rojo);
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+/* Spinner para exportar (no blanco) */
+.spinner-export {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(75, 86, 148, 0.3);
+  border-top-color: var(--azul-medio);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}

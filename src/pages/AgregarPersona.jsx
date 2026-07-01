@@ -17,6 +17,8 @@ const initialForm = {
   rfc: "",
   curp: "",
   cuip: "",
+  clave_ine: "",
+  licencia_conducir: "",
   fecha_ingreso: "",
   numero_empleado: "",
 };
@@ -26,9 +28,7 @@ function AgregarPersona({ refreshPersonal }) {
   const [form, setForm] = useState(initialForm);
   const [fotoPreview, setFotoPreview] = useState(null);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleFoto = (e) => {
     const file = e.target.files[0];
@@ -39,28 +39,15 @@ function AgregarPersona({ refreshPersonal }) {
     }
   };
 
-  // --- Double-click-safe save via useFormSubmit ---
-  const submitHandler = useCallback(
-    async (data) => {
-      await personalService.create({ ...data, foto: null });
-    },
-    []
-  );
+  const submitHandler = useCallback(async (data) => {
+    await personalService.create({ ...data, foto: null });
+  }, []);
 
-  const { isSubmitting: saving, error: saveError, handleSubmit } = useFormSubmit(
-    submitHandler,
-    {
-      onSuccess: () => {
-        refreshPersonal();
-        navigate("/personal");
-      },
-    }
-  );
+  const { isSubmitting: saving, error: saveError, handleSubmit } = useFormSubmit(submitHandler, {
+    onSuccess: () => { refreshPersonal(); navigate("/personal"); },
+  });
 
-  const onGuardar = (e) => {
-    e.preventDefault();
-    handleSubmit(form);
-  };
+  const onGuardar = (e) => { e.preventDefault(); handleSubmit(form); };
 
   return (
     <div className="ficha-page">
@@ -69,12 +56,7 @@ function AgregarPersona({ refreshPersonal }) {
           <ArrowLeft size={18} aria-hidden="true" />
           Volver
         </button>
-        <button
-          className="btn-primary"
-          onClick={onGuardar}
-          disabled={saving}
-          aria-busy={saving}
-        >
+        <button className="btn-primary" onClick={onGuardar} disabled={saving} aria-busy={saving}>
           {saving ? <span className="spinner-inline"></span> : <><Save size={16} aria-hidden="true" /> Guardar</>}
         </button>
       </div>
@@ -88,13 +70,10 @@ function AgregarPersona({ refreshPersonal }) {
       <div className="ficha-content">
         <div className="ficha-sidebar">
           <div className="ficha-foto-container">
-            {fotoPreview ? (
-              <img src={fotoPreview} alt="Foto del nuevo elemento" className="ficha-foto" />
-            ) : (
-              <div className="ficha-foto-placeholder">
-                <User size={64} aria-hidden="true" />
-              </div>
-            )}
+            {fotoPreview
+              ? <img src={fotoPreview} alt="Foto del nuevo elemento" className="ficha-foto" />
+              : <div className="ficha-foto-placeholder"><User size={64} aria-hidden="true" /></div>
+            }
           </div>
           <label className="btn-secondary btn-upload">
             <Upload size={16} aria-hidden="true" />
@@ -181,8 +160,19 @@ function AgregarPersona({ refreshPersonal }) {
                 <input id="add-curp" name="curp" value={form.curp} onChange={handleChange} placeholder="18 caracteres" />
               </div>
               <div className="form-group">
-                <label htmlFor="add-cuip">CUIP</label>
-                <input id="add-cuip" name="cuip" value={form.cuip} onChange={handleChange} placeholder={form.categoria === "Vial" ? "No aplica" : "Clave Única Policial"} />
+                <label htmlFor="add-clave_ine">Clave de INE</label>
+                <input id="add-clave_ine" name="clave_ine" value={form.clave_ine} onChange={handleChange} placeholder="Clave de elector" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="add-licencia_conducir">Núm. Licencia de Conducir</label>
+                <input id="add-licencia_conducir" name="licencia_conducir" value={form.licencia_conducir} onChange={handleChange} placeholder="Número de licencia" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="add-cuip">
+                  CUIP <span className="label-optional">(opcional)</span>
+                </label>
+                <input id="add-cuip" name="cuip" value={form.cuip} onChange={handleChange}
+                  placeholder={form.categoria === "Vial" ? "No aplica para Vial" : "Clave Única Policial"} />
               </div>
             </div>
           </div>
