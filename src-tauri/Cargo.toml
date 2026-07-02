@@ -1,0 +1,32 @@
+[package]
+name = "sicop"
+version = "1.0.0"
+description = "Sistema de Control de Personal — Corporación de Seguridad Pública"
+authors = ["SICOP"]
+license = ""
+repository = ""
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri          = { version = "2", features = [] }
+tauri-plugin-sql    = { version = "2", features = ["sqlite"] }
+tauri-plugin-dialog = { version = "2" }
+tauri-plugin-fs     = { version = "2" }
+tauri-plugin-shell  = { version = "2" }
+serde       = { version = "1", features = ["derive"] }
+serde_json  = "1"
+rusqlite    = { version = "0.31", features = ["bundled"] }
+aes-gcm     = "0.10"
+base64      = "0.22"
+rand        = "0.8"
+chrono      = { version = "0.4", features = ["serde"] }
+log         = "0.4"
+tauri-plugin-log = "2"

@@ -4,77 +4,102 @@ import { ArrowLeft, Save, UserX, UserCheck, Upload, User, AlertTriangle } from "
 import { useFormSubmit } from "../hooks/useFormSubmit";
 import * as personalService from "../services/personalService";
 
-function FichaPersona({ personal, refreshPersonal }) {
+function FichaPersona() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const persona = personal.find((p) => p.id === parseInt(id));
+  const personaId = parseInt(id);
 
-  const [form, setForm] = useState(persona || {});
-  const [showBajaModal, setShowBajaModal] = useState(false);
+  const [persona, setPersona]           = useState(null);
+  const [form, setForm]                 = useState({});
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState(null);
+  const [showBajaModal, setShowBajaModal]           = useState(false);
   const [showReactivarModal, setShowReactivarModal] = useState(false);
-  const [notaBaja, setNotaBaja] = useState("");
-  const [procesando, setProcesando] = useState(false);
-  const [fotoPreview, setFotoPreview] = useState(null);
+  const [notaBaja, setNotaBaja]         = useState("");
+  const [procesando, setProcesando]     = useState(false);
+  const [fotoPreview, setFotoPreview]   = useState(null);
 
-  useEffect(() => {
-    if (persona) setForm(persona);
-  }, [persona]);
+  // Cargar persona desde SQLite
+  const cargar = useCallback(() => {
+    setLoading(true);
+    personalService.getById(personaId)
+      .then((p) => {
+        if (!p) { setError("Persona no encontrada."); return; }
+        setPersona(p);
+        setForm(p);
+        if (p.foto) setFotoPreview(`data:image/jpeg;base64,${p.foto}`);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [personaId]);
 
+  useEffect(() => { cargar(); }, [cargar]);
+
+  // Guardar cambios — protegido contra doble clic
   const saveHandler = useCallback(async (data) => {
-    await personalService.update(data.id, data);
-  }, []);
+    await personalService.update(personaId, {
+      ...data,
+      // Si el usuario cargó foto nueva, viene como base64 puro (sin prefijo)
+      foto: fotoPreview && !fotoPreview.startsWith("data:")
+        ? fotoPreview
+        : fotoPreview
+          ? fotoPreview.replace(/^data:image\/\w+;base64,/, "")
+          : null,
+    });
+  }, [personaId, fotoPreview]);
 
   const { isSubmitting: saving, error: saveError, handleSubmit: handleGuardar } = useFormSubmit(
     saveHandler,
-    { onSuccess: () => { refreshPersonal(); navigate("/personal"); } }
+    { onSuccess: () => navigate("/personal") }
   );
 
   const handleDarBaja = useCallback(async () => {
     if (procesando) return;
     setProcesando(true);
     try {
-      await personalService.darBaja(persona.id, notaBaja.trim() || "Sin motivo especificado.");
-      await refreshPersonal();
+      await personalService.darBaja(personaId, notaBaja.trim() || "Sin motivo especificado.");
       setShowBajaModal(false);
       setNotaBaja("");
       navigate("/personal");
-    } catch {
+    } catch (e) {
+      setError(e.message);
       setProcesando(false);
     }
-  }, [procesando, persona, notaBaja, refreshPersonal, navigate]);
+  }, [procesando, personaId, notaBaja, navigate]);
 
   const handleReactivar = useCallback(async () => {
     if (procesando) return;
     setProcesando(true);
     try {
-      await personalService.reactivar(persona.id);
-      await refreshPersonal();
+      await personalService.reactivar(personaId);
       setShowReactivarModal(false);
       navigate("/personal");
-    } catch {
+    } catch (e) {
+      setError(e.message);
       setProcesando(false);
     }
-  }, [procesando, persona, refreshPersonal, navigate]);
-
-  if (!persona) {
-    return (
-      <div className="ficha-page">
-        <p>Persona no encontrada.</p>
-        <button className="btn-secondary" onClick={() => navigate("/personal")}>Volver al listado</button>
-      </div>
-    );
-  }
+  }, [procesando, personaId, navigate]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleFoto = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setFotoPreview(reader.result);
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setFotoPreview(reader.result);
+    reader.readAsDataURL(file);
   };
+
+  if (loading) return <div className="ficha-page"><p style={{ color: "var(--gris-texto)" }}>Cargando...</p></div>;
+
+  if (error && !persona) return (
+    <div className="ficha-page">
+      <div className="alert-error">{error}</div>
+      <button className="btn-secondary" style={{ marginTop: 16 }} onClick={() => navigate("/personal")}>
+        Volver al listado
+      </button>
+    </div>
+  );
 
   const esBaja = !form.activo;
 
@@ -82,19 +107,16 @@ function FichaPersona({ personal, refreshPersonal }) {
     <div className="ficha-page">
       <div className="ficha-header-row">
         <button className="btn-ghost" onClick={() => navigate("/personal")}>
-          <ArrowLeft size={18} aria-hidden="true" />
-          Volver
+          <ArrowLeft size={18} aria-hidden="true" /> Volver
         </button>
         <div className="ficha-actions">
           {esBaja ? (
             <button className="btn-reactivar" onClick={() => setShowReactivarModal(true)}>
-              <UserCheck size={16} aria-hidden="true" />
-              Reactivar
+              <UserCheck size={16} aria-hidden="true" /> Reactivar
             </button>
           ) : (
             <button className="btn-danger" onClick={() => setShowBajaModal(true)}>
-              <UserX size={16} aria-hidden="true" />
-              Dar de Baja
+              <UserX size={16} aria-hidden="true" /> Dar de Baja
             </button>
           )}
           <button className="btn-primary" onClick={() => handleGuardar(form)} disabled={saving} aria-busy={saving}>
@@ -103,11 +125,8 @@ function FichaPersona({ personal, refreshPersonal }) {
         </div>
       </div>
 
-      {saveError && (
-        <div role="alert" className="alert-error">{saveError}</div>
-      )}
+      {saveError && <div role="alert" className="alert-error">{saveError}</div>}
 
-      {/* Banner de baja */}
       {esBaja && (
         <div className="baja-banner" role="alert">
           <AlertTriangle size={18} aria-hidden="true" />
@@ -123,12 +142,10 @@ function FichaPersona({ personal, refreshPersonal }) {
           <div className="ficha-foto-container">
             {fotoPreview
               ? <img src={fotoPreview} alt={`Foto de ${form.nombre}`} className="ficha-foto" />
-              : <div className="ficha-foto-placeholder"><User size={64} aria-hidden="true" /></div>
-            }
+              : <div className="ficha-foto-placeholder"><User size={64} aria-hidden="true" /></div>}
           </div>
           <label className="btn-secondary btn-upload">
-            <Upload size={16} aria-hidden="true" />
-            Cargar Foto
+            <Upload size={16} aria-hidden="true" /> Cargar Foto
             <input type="file" accept="image/*" onChange={handleFoto} hidden aria-label="Seleccionar fotografía" />
           </label>
           <div className="ficha-badge-container">
@@ -146,41 +163,26 @@ function FichaPersona({ personal, refreshPersonal }) {
           <div className="form-section">
             <h3>Datos Personales</h3>
             <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="edit-nombre">Nombre</label>
-                <input id="edit-nombre" name="nombre" value={form.nombre || ""} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label htmlFor="edit-apellidos">Apellidos</label>
-                <input id="edit-apellidos" name="apellidos" value={form.apellidos || ""} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label htmlFor="edit-fecha_nacimiento">Fecha de Nacimiento</label>
-                <input id="edit-fecha_nacimiento" type="date" name="fecha_nacimiento" value={form.fecha_nacimiento || ""} onChange={handleChange} />
-              </div>
+              {[
+                { id: "nombre",              label: "Nombre" },
+                { id: "apellidos",           label: "Apellidos" },
+                { id: "fecha_nacimiento",    label: "Fecha de Nacimiento",    type: "date" },
+                { id: "direccion",           label: "Dirección" },
+                { id: "telefono",            label: "Teléfono" },
+                { id: "telefono_emergencia", label: "Teléfono de Emergencia" },
+                { id: "escolaridad",         label: "Escolaridad" },
+              ].map(({ id: field, label, type = "text" }) => (
+                <div key={field} className="form-group">
+                  <label htmlFor={`edit-${field}`}>{label}</label>
+                  <input id={`edit-${field}`} type={type} name={field}
+                    value={form[field] || ""} onChange={handleChange} />
+                </div>
+              ))}
               <div className="form-group">
                 <label htmlFor="edit-tipo_sangre">Tipo de Sangre</label>
                 <select id="edit-tipo_sangre" name="tipo_sangre" value={form.tipo_sangre || ""} onChange={handleChange}>
-                  {["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"].map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
+                  {["O+","O-","A+","A-","B+","B-","AB+","AB-"].map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
-              </div>
-              <div className="form-group">
-                <label htmlFor="edit-direccion">Dirección</label>
-                <input id="edit-direccion" name="direccion" value={form.direccion || ""} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label htmlFor="edit-telefono">Teléfono</label>
-                <input id="edit-telefono" name="telefono" value={form.telefono || ""} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label htmlFor="edit-telefono_emergencia">Teléfono de Emergencia</label>
-                <input id="edit-telefono_emergencia" name="telefono_emergencia" value={form.telefono_emergencia || ""} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label htmlFor="edit-escolaridad">Escolaridad</label>
-                <input id="edit-escolaridad" name="escolaridad" value={form.escolaridad || ""} onChange={handleChange} />
               </div>
             </div>
           </div>
@@ -209,47 +211,32 @@ function FichaPersona({ personal, refreshPersonal }) {
           <div className="form-section">
             <h3>Documentos de Identidad</h3>
             <div className="form-grid">
+              {[
+                { id: "rfc",               label: "RFC" },
+                { id: "curp",              label: "CURP" },
+                { id: "clave_ine",         label: "Clave de INE" },
+                { id: "licencia_conducir", label: "Núm. Licencia de Conducir" },
+              ].map(({ id: field, label }) => (
+                <div key={field} className="form-group">
+                  <label htmlFor={`edit-${field}`}>{label}</label>
+                  <input id={`edit-${field}`} name={field} value={form[field] || ""} onChange={handleChange} />
+                </div>
+              ))}
               <div className="form-group">
-                <label htmlFor="edit-rfc">RFC</label>
-                <input id="edit-rfc" name="rfc" value={form.rfc || ""} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label htmlFor="edit-curp">CURP</label>
-                <input id="edit-curp" name="curp" value={form.curp || ""} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label htmlFor="edit-clave_ine">Clave de INE</label>
-                <input id="edit-clave_ine" name="clave_ine" value={form.clave_ine || ""} onChange={handleChange} placeholder="Clave de elector" />
-              </div>
-              <div className="form-group">
-                <label htmlFor="edit-licencia_conducir">Núm. Licencia de Conducir</label>
-                <input id="edit-licencia_conducir" name="licencia_conducir" value={form.licencia_conducir || ""} onChange={handleChange} placeholder="Número de licencia" />
-              </div>
-              <div className="form-group">
-                <label htmlFor="edit-cuip">
-                  CUIP <span className="label-optional">(opcional)</span>
-                </label>
+                <label htmlFor="edit-cuip">CUIP <span className="label-optional">(opcional)</span></label>
                 <input id="edit-cuip" name="cuip" value={form.cuip || ""} onChange={handleChange}
                   placeholder={form.categoria === "Vial" ? "No aplica para Vial" : "Clave Única Policial"} />
               </div>
             </div>
           </div>
 
-          {/* Nota de baja solo visible si está dado de baja */}
           {esBaja && (
             <div className="form-section">
               <h3>Motivo de Baja</h3>
               <div className="form-group">
                 <label htmlFor="edit-nota_baja">Nota</label>
-                <textarea
-                  id="edit-nota_baja"
-                  name="nota_baja"
-                  value={form.nota_baja || ""}
-                  onChange={handleChange}
-                  rows={3}
-                  className="textarea-baja"
-                  placeholder="Motivo de la baja..."
-                />
+                <textarea id="edit-nota_baja" name="nota_baja" value={form.nota_baja || ""}
+                  onChange={handleChange} rows={3} className="textarea-baja" placeholder="Motivo de la baja..." />
               </div>
             </div>
           )}
@@ -259,20 +246,15 @@ function FichaPersona({ personal, refreshPersonal }) {
       {/* Modal: Dar de baja */}
       {showBajaModal && (
         <div className="modal-overlay" onClick={() => setShowBajaModal(false)} role="presentation">
-          <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="baja-modal-title">
-            <h3 id="baja-modal-title">Dar de baja a {persona.nombre} {persona.apellidos}</h3>
+          <div className="modal" onClick={(e) => e.stopPropagation()}
+            role="dialog" aria-modal="true" aria-labelledby="baja-modal-title">
+            <h3 id="baja-modal-title">Dar de baja a {persona?.nombre} {persona?.apellidos}</h3>
             <p>El registro no se eliminará. Quedará marcado como baja y podrá ser consultado.</p>
             <div className="form-group" style={{ marginBottom: "24px" }}>
-              <label htmlFor="modal-nota-baja">Motivo de la baja <span className="label-optional">(opcional)</span></label>
-              <textarea
-                id="modal-nota-baja"
-                value={notaBaja}
-                onChange={(e) => setNotaBaja(e.target.value)}
-                rows={3}
-                className="textarea-baja"
-                placeholder="Ej: Renuncia voluntaria, terminación de contrato, etc."
-                autoFocus
-              />
+              <label htmlFor="modal-nota-baja">Motivo <span className="label-optional">(opcional)</span></label>
+              <textarea id="modal-nota-baja" value={notaBaja} onChange={(e) => setNotaBaja(e.target.value)}
+                rows={3} className="textarea-baja" autoFocus
+                placeholder="Ej: Renuncia voluntaria, terminación de contrato..." />
             </div>
             <div className="modal-actions">
               <button className="btn-secondary" onClick={() => { setShowBajaModal(false); setNotaBaja(""); }} disabled={procesando}>
@@ -289,9 +271,10 @@ function FichaPersona({ personal, refreshPersonal }) {
       {/* Modal: Reactivar */}
       {showReactivarModal && (
         <div className="modal-overlay" onClick={() => setShowReactivarModal(false)} role="presentation">
-          <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="reactivar-modal-title">
-            <h3 id="reactivar-modal-title">Reactivar a {persona.nombre} {persona.apellidos}</h3>
-            <p>El elemento volverá a aparecer como activo en el sistema. Se borrará la nota de baja.</p>
+          <div className="modal" onClick={(e) => e.stopPropagation()}
+            role="dialog" aria-modal="true" aria-labelledby="reactivar-modal-title">
+            <h3 id="reactivar-modal-title">Reactivar a {persona?.nombre} {persona?.apellidos}</h3>
+            <p>El elemento volverá a aparecer como activo. Se borrará la nota de baja.</p>
             <div className="modal-actions">
               <button className="btn-secondary" onClick={() => setShowReactivarModal(false)} disabled={procesando}>
                 Cancelar
