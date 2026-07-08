@@ -15,7 +15,7 @@ const navItems = [
   { to: "/importar", icon: FileSpreadsheet, label: "Importar Excel" },
 ];
 
-function Layout({ onLogout }) {
+function Layout({ onLogout, sesion }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -70,8 +70,10 @@ function Layout({ onLogout }) {
         <header className="top-header">
           <h2 className="header-title">{getPageTitle()}</h2>
           <div className="header-user">
-            <span className="user-name">Admin</span>
-            <div className="user-avatar">A</div>
+            <span className="user-name">{sesion?.nombre || sesion?.username || "Admin"}</span>
+            <div className="user-avatar">
+              {(sesion?.nombre || sesion?.username || "A").charAt(0).toUpperCase()}
+            </div>
           </div>
         </header>
         <main className="main-content">

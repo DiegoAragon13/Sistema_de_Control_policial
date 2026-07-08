@@ -4,27 +4,27 @@ import Login from "./pages/Login";
 import Layout from "./components/Layout";
 import PageSkeleton from "./components/ui/PageSkeleton";
 
-// Code-splitting: cada página es un chunk independiente
-const Dashboard    = lazy(() => import("./pages/Dashboard"));
-const Personal     = lazy(() => import("./pages/Personal"));
-const FichaPersona = lazy(() => import("./pages/FichaPersona"));
+const Dashboard      = lazy(() => import("./pages/Dashboard"));
+const Personal       = lazy(() => import("./pages/Personal"));
+const FichaPersona   = lazy(() => import("./pages/FichaPersona"));
 const AgregarPersona = lazy(() => import("./pages/AgregarPersona"));
 const ImportarExcel  = lazy(() => import("./pages/ImportarExcel"));
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // sesion: { id, username, nombre, rol } | null
+  const [sesion, setSesion] = useState(null);
 
-  const handleLogin  = () => setIsLoggedIn(true);
-  const handleLogout = () => setIsLoggedIn(false);
+  const handleLogin  = (sesionInfo) => setSesion(sesionInfo);
+  const handleLogout = () => setSesion(null);
 
-  if (!isLoggedIn) {
+  if (!sesion) {
     return <Login onLogin={handleLogin} />;
   }
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<Layout onLogout={handleLogout} />}>
+        <Route element={<Layout onLogout={handleLogout} sesion={sesion} />}>
           <Route path="/" element={
             <Suspense fallback={<PageSkeleton />}><Dashboard /></Suspense>
           } />

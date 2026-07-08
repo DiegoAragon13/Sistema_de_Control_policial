@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, UserX, UserCheck, Upload, User, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Save, UserX, UserCheck, Upload, User, AlertTriangle, FileText } from "lucide-react";
 import { useFormSubmit } from "../hooks/useFormSubmit";
 import * as personalService from "../services/personalService";
+// pdfService se carga solo cuando el usuario hace clic en "Descargar PDF"
+// para no añadir 1.4MB al chunk inicial de FichaPersona
+const getPDFService = () => import("../services/pdfService.jsx");
 
 function FichaPersona() {
   const { id } = useParams();
@@ -18,6 +21,7 @@ function FichaPersona() {
   const [notaBaja, setNotaBaja]         = useState("");
   const [procesando, setProcesando]     = useState(false);
   const [fotoPreview, setFotoPreview]   = useState(null);
+  const [generandoPDF, setGenerandoPDF] = useState(false);
 
   // Cargar persona desde SQLite
   const cargar = useCallback(() => {
@@ -90,6 +94,25 @@ function FichaPersona() {
     reader.readAsDataURL(file);
   };
 
+  const handleDescargarPDF = useCallback(async () => {
+    if (generandoPDF) return;
+    setGenerandoPDF(true);
+    try {
+      const { generarPDFPerfil } = await getPDFService();
+      const personaConFoto = {
+        ...form,
+        foto: fotoPreview
+          ? fotoPreview.replace(/^data:image\/\w+;base64,/, "")
+          : persona?.foto || null,
+      };
+      await generarPDFPerfil(personaConFoto);
+    } catch (e) {
+      alert("Error al generar el PDF: " + e.message);
+    } finally {
+      setGenerandoPDF(false);
+    }
+  }, [generandoPDF, form, fotoPreview, persona]);
+
   if (loading) return <div className="ficha-page"><p style={{ color: "var(--gris-texto)" }}>Cargando...</p></div>;
 
   if (error && !persona) return (
@@ -110,6 +133,10 @@ function FichaPersona() {
           <ArrowLeft size={18} aria-hidden="true" /> Volver
         </button>
         <div className="ficha-actions">
+          <button className="btn-secondary" onClick={handleDescargarPDF} disabled={generandoPDF} aria-busy={generandoPDF}>
+            {generandoPDF ? <span className="spinner-export"></span> : <FileText size={16} aria-hidden="true" />}
+            {generandoPDF ? "Generando..." : "Descargar PDF"}
+          </button>
           {esBaja ? (
             <button className="btn-reactivar" onClick={() => setShowReactivarModal(true)}>
               <UserCheck size={16} aria-hidden="true" /> Reactivar

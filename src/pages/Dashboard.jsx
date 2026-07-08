@@ -15,32 +15,35 @@ function Dashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  const totalPreventiva = useMemo(() => personal.filter((p) => p.categoria === "Preventiva").length, [personal]);
-  const totalViales     = useMemo(() => personal.filter((p) => p.categoria === "Vial").length, [personal]);
+  // Solo contar elementos ACTIVOS en todas las métricas del dashboard
+  const activos         = useMemo(() => personal.filter((p) => p.activo !== false), [personal]);
+
+  const totalPreventiva = useMemo(() => activos.filter((p) => p.categoria === "Preventiva").length, [activos]);
+  const totalViales     = useMemo(() => activos.filter((p) => p.categoria === "Vial").length, [activos]);
   const anioActual      = useMemo(() => new Date().getFullYear(), []);
   const ingresosEsteAnio = useMemo(() =>
-    personal.filter((p) => new Date(p.fecha_ingreso).getFullYear() === anioActual).length,
-    [personal, anioActual]
+    activos.filter((p) => new Date(p.fecha_ingreso).getFullYear() === anioActual).length,
+    [activos, anioActual]
   );
   const pctPreventiva = useMemo(() =>
-    personal.length > 0 ? ((totalPreventiva / personal.length) * 100).toFixed(0) : "0",
-    [totalPreventiva, personal.length]
+    activos.length > 0 ? ((totalPreventiva / activos.length) * 100).toFixed(0) : "0",
+    [totalPreventiva, activos.length]
   );
   const pctVial = useMemo(() =>
-    personal.length > 0 ? ((totalViales / personal.length) * 100).toFixed(0) : "0",
-    [totalViales, personal.length]
+    activos.length > 0 ? ((totalViales / activos.length) * 100).toFixed(0) : "0",
+    [totalViales, activos.length]
   );
   const recientes = useMemo(() =>
-    [...personal]
+    [...activos]
       .sort((a, b) => new Date(b.fecha_ingreso) - new Date(a.fecha_ingreso))
       .slice(0, 5),
-    [personal]
+    [activos]
   );
 
   const centerLabel =
     hovered === "preventiva" ? { value: totalPreventiva, label: "Preventiva", pct: `${pctPreventiva}%` } :
     hovered === "vial"       ? { value: totalViales,     label: "Vial",        pct: `${pctVial}%` } :
-                               { value: personal.length, label: "Total",       pct: "" };
+                               { value: activos.length,  label: "Activos",     pct: "" };
 
   if (loading) return (
     <div className="dashboard">
@@ -66,8 +69,8 @@ function Dashboard() {
             <Users size={28} color="#fff" aria-hidden="true" />
           </div>
           <div className="stat-info">
-            <span className="stat-number">{personal.length}</span>
-            <span className="stat-label">Total Personal</span>
+            <span className="stat-number">{activos.length}</span>
+            <span className="stat-label">Total Activos</span>
           </div>
         </div>
         <div className="stat-card">
@@ -138,7 +141,7 @@ function Dashboard() {
                 <circle cx="100" cy="100" r="80" fill="none"
                   stroke={hovered === "preventiva" ? "#3a4578" : "var(--azul-medio)"}
                   strokeWidth="40"
-                  strokeDasharray={`${personal.length > 0 ? (totalPreventiva / personal.length) * 502.65 : 0} 502.65`}
+                  strokeDasharray={`${activos.length > 0 ? (totalPreventiva / activos.length) * 502.65 : 0} 502.65`}
                   strokeDashoffset="0" transform="rotate(-90 100 100)"
                   className="pie-segment"
                   opacity={hovered === "vial" ? 0.5 : 1}

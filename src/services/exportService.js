@@ -1,158 +1,124 @@
 /**
  * exportService.js
- * Genera un archivo .xlsx con una hoja por persona.
- * Cada hoja tiene el formato de expediente listo para imprimir
- * o enviar a comandantes para llenado.
+ * Genera un .xlsx con una hoja por persona en formato de expediente.
  *
  * Estructura de cada hoja:
- *   Fila 1    : Encabezado institucional
- *   Filas 2-3 : Espacio reservado para foto (celda combinada A2:B8)
- *   Filas 2-8 : Datos personales (columnas C-E)
- *   Fila 9+   : Datos laborales
- *   Fila 14+  : Documentos de identidad
- *   Última    : Nota de baja si aplica
+ *   Filas 0-1  : Encabezado institucional
+ *   Filas 2-12 : Bloque de foto (A2:B12 combinado) + nombre y datos clave al lado
+ *   Filas 13+  : Datos personales, laborales, documentos
+ *   Últimas    : Firmas / sello
  */
 
-// Dynamic import so xlsx (~550KB) is only loaded when the user clicks Export,
-// not on initial page load. Keeps the Personal page chunk small.
+import { guardarExcel } from "./excelDialogService";
+
 let _XLSX = null;
 async function getXLSX() {
   if (!_XLSX) _XLSX = await import("xlsx");
   return _XLSX;
 }
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
-/** Aplica estilos a una celda (SheetJS no soporta estilos en la versión CE,
- *  pero dejamos la estructura lista para xlsx-js-style si se migra). */
-function cell(value, type = "s") {
-  return { v: value, t: type };
-}
+// ── Constructor de hoja ───────────────────────────────────────────────────────
 
 function buildHoja(persona, XLSX) {
-  // SheetJS usa coordenadas A1, B2, etc. Construimos un objeto de celdas.
-  const ws = {};
-  const range = { s: { c: 0, r: 0 }, e: { c: 5, r: 30 } };
+  const ws    = {};
+  const range = { s: { c: 0, r: 0 }, e: { c: 5, r: 35 } };
 
-  // ── Utilidad para escribir celdas ──
   const set = (col, row, value) => {
     const addr = XLSX.utils.encode_cell({ c: col, r: row });
     ws[addr] = { v: value ?? "", t: typeof value === "number" ? "n" : "s" };
   };
 
-  // ── Fila 0: Encabezado institucional ──
+  // ── Fila 0: Encabezado ──
   set(0, 0, "CORPORACIÓN DE SEGURIDAD PÚBLICA");
-  set(2, 0, "EXPEDIENTE DE PERSONAL");
-  set(4, 0, `No. Empleado: ${persona.numero_empleado || ""}`);
+  set(3, 0, "EXPEDIENTE DE PERSONAL");
+  set(5, 0, persona.activo === false ? "★ BAJA ★" : "ACTIVO");
 
-  // ── Fila 1: Separador ──
-  set(0, 1, "────────────────────────────────────────────────────────────────────────");
+  // ── Fila 1: separador ──
+  set(0, 1, "─────────────────────────────────────────────────────────────────────");
 
-  // ── Filas 2-8: Espacio de foto + datos de identificación ──
-  set(0, 2, "[  FOTO  ]");   // columnas A-B reservadas para foto al imprimir
-  set(0, 3, "");
-  set(0, 4, "");
-  set(0, 5, "");
-  set(0, 6, "");
-  set(0, 7, "");
+  // ── Filas 2-12: FOTO (columnas A-B) + datos básicos (columnas C-F) ──
+  // La columna A-B es el bloque de foto (se deja vacío, se combina visualmente)
+  set(0, 2, "[  FOTOGRAFÍA  ]");
+  // Las celdas A3-B12 quedan vacías para el bloque combinado
 
-  // Nombre completo destacado
-  set(2, 2, "NOMBRE COMPLETO:");
-  set(3, 2, `${persona.nombre || ""} ${persona.apellidos || ""}`.trim());
+  // Nombre completo destacado al lado de la foto
+  set(2, 2, `${persona.nombre || ""} ${persona.apellidos || ""}`.trim().toUpperCase());
 
-  set(2, 3, "Categoría:");
-  set(3, 3, persona.categoria || "");
+  set(2, 4,  "Categoría:");      set(3, 4,  persona.categoria || "");
+  set(2, 5,  "Núm. Empleado:");  set(3, 5,  persona.numero_empleado || "");
+  set(2, 6,  "Fecha Ingreso:");  set(3, 6,  persona.fecha_ingreso || "");
+  set(2, 7,  "Tipo Sangre:");    set(3, 7,  persona.tipo_sangre || "");
+  set(4, 4,  "Estado:");         set(5, 4,  persona.activo === false ? "BAJA" : "ACTIVO");
+  set(4, 5,  "Teléfono:");       set(5, 5,  persona.telefono || "");
+  set(4, 6,  "Tel. Emergencia:"); set(5, 6, persona.telefono_emergencia || "");
 
-  set(2, 4, "Estado:");
-  set(3, 4, persona.activo === false ? "BAJA" : "ACTIVO");
+  // ── Fila 13: separador ──
+  set(0, 13, "── DATOS PERSONALES ────────────────────────────────────────────────");
 
-  set(4, 2, "Fecha de Ingreso:");
-  set(5, 2, persona.fecha_ingreso || "");
+  set(0, 14, "Nombre completo:");  set(1, 14, `${persona.nombre || ""} ${persona.apellidos || ""}`);
+  set(0, 15, "Fecha Nacimiento:"); set(1, 15, persona.fecha_nacimiento || "");
+  set(2, 15, "Escolaridad:");      set(3, 15, persona.escolaridad || "");
+  set(0, 16, "Dirección:");        set(1, 16, persona.direccion || "");
 
-  set(4, 3, "Núm. Empleado:");
-  set(5, 3, persona.numero_empleado || "");
+  // ── Fila 17: separador ──
+  set(0, 17, "── DOCUMENTOS DE IDENTIDAD ─────────────────────────────────────────");
 
-  set(4, 4, "Tipo de Sangre:");
-  set(5, 4, persona.tipo_sangre || "");
+  set(0, 18, "RFC:");        set(1, 18, persona.rfc || "");
+  set(2, 18, "CURP:");       set(3, 18, persona.curp || "");
+  set(0, 19, "Clave INE:");  set(1, 19, persona.clave_ine || "");
+  set(2, 19, "Licencia:");   set(3, 19, persona.licencia_conducir || "");
+  set(0, 20, "CUIP:");
+  set(1, 20, persona.cuip || (persona.categoria === "Vial" ? "No aplica" : ""));
 
-  // ── Fila 9: Separador sección ──
-  set(0, 9, "── DATOS PERSONALES ─────────────────────────────────────────────────────");
+  // ── Fila 21: separador ──
+  set(0, 21, "── FIRMA Y VALIDACIÓN ──────────────────────────────────────────────");
 
-  set(0, 10, "Fecha de Nacimiento:"); set(1, 10, persona.fecha_nacimiento || "");
-  set(2, 10, "Escolaridad:");        set(3, 10, persona.escolaridad || "");
+  set(0, 22, "Firma del elemento:");
+  set(2, 22, "Firma del comandante:");
+  set(4, 22, "Sello:");
 
-  set(0, 11, "Dirección:");
-  set(1, 11, persona.direccion || "");
+  set(0, 24, "___________________________");
+  set(2, 24, "___________________________");
+  set(4, 24, "___________________________");
 
-  set(0, 12, "Teléfono:");           set(1, 12, persona.telefono || "");
-  set(2, 12, "Tel. Emergencia:");    set(3, 12, persona.telefono_emergencia || "");
-
-  // ── Fila 13: Separador sección ──
-  set(0, 13, "── DOCUMENTOS DE IDENTIDAD ──────────────────────────────────────────────");
-
-  set(0, 14, "RFC:");       set(1, 14, persona.rfc || "");
-  set(2, 14, "CURP:");      set(3, 14, persona.curp || "");
-
-  set(0, 15, "Clave INE:"); set(1, 15, persona.clave_ine || "");
-  set(2, 15, "Licencia:");  set(3, 15, persona.licencia_conducir || "");
-
-  set(0, 16, "CUIP:");
-  set(1, 16, persona.cuip || (persona.categoria === "Vial" ? "No aplica" : ""));
-
-  // ── Fila 17: Separador sección ──
-  set(0, 17, "── FIRMA Y VALIDACIÓN ───────────────────────────────────────────────────");
-
-  set(0, 18, "Firma del elemento:");
-  set(2, 18, "Firma del comandante:");
-  set(4, 18, "Sello:");
-
-  set(0, 19, "");
-  set(0, 20, "___________________________");
-  set(2, 20, "___________________________");
-  set(4, 20, "___________________________");
-
-  // ── Nota de baja (si aplica) ──
+  // ── Nota de baja ──
   if (persona.activo === false && persona.nota_baja) {
-    set(0, 22, "── NOTA DE BAJA ─────────────────────────────────────────────────────────");
-    set(0, 23, persona.nota_baja);
+    set(0, 26, "── NOTA DE BAJA ────────────────────────────────────────────────────");
+    set(0, 27, persona.nota_baja);
   }
 
-  ws["!ref"] = XLSX.utils.encode_range(range);
-
-  // Ancho de columnas (caracteres)
+  ws["!ref"]  = XLSX.utils.encode_range(range);
   ws["!cols"] = [
-    { wch: 22 }, // A
-    { wch: 28 }, // B
-    { wch: 22 }, // C
-    { wch: 28 }, // D
-    { wch: 20 }, // E
-    { wch: 20 }, // F
+    { wch: 20 }, // A — etiquetas / bloque foto
+    { wch: 26 }, // B — valores
+    { wch: 20 }, // C
+    { wch: 26 }, // D
+    { wch: 18 }, // E
+    { wch: 18 }, // F
   ];
-
-  // Altura de filas: fila 0 más alta (encabezado), filas 2-8 para la foto
   ws["!rows"] = [
-    { hpt: 22 }, // fila 0 — encabezado
-    { hpt: 6  }, // fila 1 — separador
-    { hpt: 20 }, // fila 2
-    { hpt: 20 }, // fila 3
-    { hpt: 20 }, // fila 4
-    { hpt: 20 }, // fila 5
-    { hpt: 20 }, // fila 6
-    { hpt: 20 }, // fila 7
-    { hpt: 20 }, // fila 8
+    { hpt: 22 }, // 0 encabezado
+    { hpt: 6  }, // 1 separador
+    { hpt: 72 }, // 2 fila de inicio del bloque foto — alta para dar espacio
+    { hpt: 18 }, { hpt: 18 }, { hpt: 18 }, { hpt: 18 },
+    { hpt: 18 }, { hpt: 18 }, { hpt: 18 }, { hpt: 18 },
+    { hpt: 18 }, { hpt: 18 }, // 12
   ];
 
-  // Combinar A2:B8 para el bloque de foto
   ws["!merges"] = [
-    { s: { c: 0, r: 2 }, e: { c: 1, r: 8 } },   // bloque foto
-    { s: { c: 0, r: 0 }, e: { c: 1, r: 0 } },   // encabezado izq
-    { s: { c: 0, r: 11 }, e: { c: 5, r: 11 } }, // dirección full width
-    { s: { c: 0, r: 1  }, e: { c: 5, r: 1  } }, // separador full width
-    { s: { c: 0, r: 9  }, e: { c: 5, r: 9  } },
+    // Bloque de foto: A3:B13 (filas 2 a 12, columnas 0 a 1)
+    { s: { c: 0, r: 2 }, e: { c: 1, r: 12 } },
+    // Nombre completo: C3:F3 (columnas 2 a 5, fila 2)
+    { s: { c: 2, r: 2 }, e: { c: 5, r: 3 } },
+    // Separadores full width
+    { s: { c: 0, r: 1  }, e: { c: 5, r: 1  } },
+    { s: { c: 0, r: 0  }, e: { c: 2, r: 0  } },
     { s: { c: 0, r: 13 }, e: { c: 5, r: 13 } },
+    { s: { c: 0, r: 16 }, e: { c: 5, r: 16 } },
     { s: { c: 0, r: 17 }, e: { c: 5, r: 17 } },
-    { s: { c: 0, r: 22 }, e: { c: 5, r: 22 } },
-    { s: { c: 0, r: 23 }, e: { c: 5, r: 23 } },
+    { s: { c: 0, r: 21 }, e: { c: 5, r: 21 } },
+    { s: { c: 0, r: 26 }, e: { c: 5, r: 26 } },
+    { s: { c: 0, r: 27 }, e: { c: 5, r: 27 } },
   ];
 
   return ws;
@@ -161,8 +127,8 @@ function buildHoja(persona, XLSX) {
 // ── Función principal ─────────────────────────────────────────────────────────
 
 /**
- * Genera y descarga un archivo .xlsx con una hoja por persona.
- * @param {Array} listaPersonal - Array de objetos persona (los que están en la vista actual)
+ * Genera y guarda (con diálogo nativo) un .xlsx con una hoja por persona.
+ * @param {Array} listaPersonal
  */
 export async function exportarExcel(listaPersonal) {
   if (!listaPersonal || listaPersonal.length === 0) {
@@ -174,9 +140,9 @@ export async function exportarExcel(listaPersonal) {
 
   const wb = XLSX.utils.book_new();
   wb.Props = {
-    Title: "Expedientes de Personal",
-    Subject: "Corporación de Seguridad Pública",
-    Author: "SICOP",
+    Title:       "Expedientes de Personal",
+    Subject:     "Corporación de Seguridad Pública",
+    Author:      "SICOP",
     CreatedDate: new Date(),
   };
 
@@ -189,6 +155,5 @@ export async function exportarExcel(listaPersonal) {
   });
 
   const fecha = new Date().toISOString().slice(0, 10);
-  const fileName = `Expedientes_Personal_${fecha}.xlsx`;
-  XLSX.writeFile(wb, fileName);
+  await guardarExcel(wb, `Expedientes_Personal_${fecha}.xlsx`, "Guardar expedientes de personal");
 }

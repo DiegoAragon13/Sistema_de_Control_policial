@@ -30,6 +30,9 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            // Auth
+            commands::auth::cmd_login,
+            commands::auth::cmd_cambiar_password,
             // Personal CRUD
             commands::personal::cmd_get_all,
             commands::personal::cmd_get_by_id,
