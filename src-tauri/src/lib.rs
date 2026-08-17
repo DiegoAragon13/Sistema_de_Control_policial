@@ -44,6 +44,8 @@ pub fn run() {
             // Sync / exportación .sicop
             commands::sync::cmd_exportar_sicop,
             commands::sync::cmd_get_meta,
+            // Archivos: diálogo guardar
+            commands::archivos::cmd_guardar_archivo,
         ])
         .run(tauri::generate_context!())
         .expect("Error al iniciar SICOP");

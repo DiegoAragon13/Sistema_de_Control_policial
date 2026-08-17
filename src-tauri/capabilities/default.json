@@ -1,11 +1,1 @@
-{
-  "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
-  "description": "enables the default permissions",
-  "windows": [
-    "main"
-  ],
-  "permissions": [
-    "core:default"
-  ]
-}
+{"identifier":"default","description":"Permisos del sistema SICOP","windows":["main"],"permissions":["core:default","dialog:allow-save","dialog:allow-open","dialog:allow-message","dialog:allow-ask","fs:allow-write-file","fs:allow-write-text-file","fs:allow-read-file","fs:allow-read-text-file","fs:allow-read-dir","fs:allow-mkdir","fs:allow-exists","fs:allow-stat","fs:scope-appdata-recursive","fs:scope-download-recursive","fs:scope-document-recursive","fs:scope-desktop-recursive","fs:scope-home-recursive","shell:allow-open","log:default"]}

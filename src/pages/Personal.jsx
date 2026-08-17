@@ -166,7 +166,10 @@ function Personal() {
                 aria-label={`Ver ficha de ${p.nombre} ${p.apellidos}${p.activo === false ? " (Baja)" : ""}`}>
                 <td>
                   <div className={`table-avatar ${p.activo === false ? "avatar-baja" : ""}`}>
-                    {p.nombre.charAt(0)}{p.apellidos.charAt(0)}
+                    {p.foto
+                      ? <img src={`data:image/jpeg;base64,${p.foto}`} alt="" className="avatar-img" />
+                      : <>{p.nombre.charAt(0)}{p.apellidos.charAt(0)}</>
+                    }
                   </div>
                 </td>
                 <td className="td-name">

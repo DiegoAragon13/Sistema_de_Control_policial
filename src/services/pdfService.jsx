@@ -19,11 +19,9 @@ import {
   Text,
   Image,
   StyleSheet,
-  Font,
 } from "@react-pdf/renderer";
-
-// Importar la imagen como URL para que react-pdf pueda usarla
 import estrellaUrl from "../assets/Estrella Seguridad.png";
+import { invoke } from "../lib/tauri";
 
 // ── Paleta de colores ──────────────────────────────────────────────────────
 const AZUL_OSCURO = "#111844";
@@ -303,7 +301,7 @@ function PerfilPDF({ persona }) {
         <View style={s.header}>
           <Image src={estrellaUrl} style={s.headerLogo} />
           <View style={s.headerTexts}>
-            <Text style={s.headerTitle}>CORPORACIÓN DE SEGURIDAD PÚBLICA</Text>
+            <Text style={s.headerTitle}>DIRECCIÓN MUNICIPAL DE SEGURIDAD PÚBLICA</Text>
             <Text style={s.headerSub}>Sistema de Control de Personal — SICOP</Text>
           </View>
           <Text style={s.headerNumEmpleado}>{persona.numero_empleado}</Text>
@@ -375,19 +373,9 @@ function PerfilPDF({ persona }) {
           </View>
         </View>
 
-        {/* ── Firmas ── */}
-        <View style={s.firmasSection}>
-          {["Firma del Elemento", "Firma del Comandante", "Sello Oficial"].map((label) => (
-            <View key={label} style={s.firmaItem}>
-              <View style={s.firmaLinea} />
-              <Text style={s.firmaLabel}>{label}</Text>
-            </View>
-          ))}
-        </View>
-
         {/* ── Pie de página ── */}
         <View style={s.footer} fixed>
-          <Text style={s.footerText}>SICOP — Corporación de Seguridad Pública</Text>
+          <Text style={s.footerText}>DIRECCIÓN MUNICIPAL DE SEGURIDAD PÚBLICA — SICOP</Text>
           <Text style={s.footerText}>Generado: {fechaGeneracion}</Text>
         </View>
 
@@ -399,33 +387,34 @@ function PerfilPDF({ persona }) {
 // ── Función pública ───────────────────────────────────────────────────────
 
 /**
- * Genera y descarga el PDF del perfil de un elemento.
- * En Tauri: abre el diálogo nativo de guardar.
+ * Genera y guarda el PDF del perfil.
+ * En Tauri: llama cmd_guardar_archivo (Rust abre el diálogo nativo).
  * En browser: descarga directamente.
- *
- * @param {Object} persona - Objeto persona completo (con foto como base64 o null)
  */
 export async function generarPDFPerfil(persona) {
-  const blob = await pdf(<PerfilPDF persona={persona} />).toBlob();
+  const blob   = await pdf(<PerfilPDF persona={persona} />).toBlob();
+  const buffer = await blob.arrayBuffer();
+  const uint8  = new Uint8Array(buffer);
 
   const nombreSugerido = `Perfil_${persona.numero_empleado}_${persona.nombre}_${persona.apellidos}.pdf`
     .replace(/\s+/g, "_");
 
-  // Tauri: usar el diálogo nativo de guardar
   if (typeof window !== "undefined" && window.__TAURI_INTERNALS__) {
-    const { save }        = await import("@tauri-apps/plugin-dialog");
-    const { writeFile }   = await import("@tauri-apps/plugin-fs");
+    // Convertir a base64 y mandar a Rust
+    let binary = "";
+    for (let i = 0; i < uint8.byteLength; i++) {
+      binary += String.fromCharCode(uint8[i]);
+    }
+    const b64 = btoa(binary);
 
-    const ruta = await save({
-      title: "Guardar perfil PDF",
-      defaultPath: nombreSugerido,
-      filters: [{ name: "PDF", extensions: ["pdf"] }],
+    await invoke("cmd_guardar_archivo", {
+      input: {
+        nombre_sugerido: nombreSugerido,
+        titulo:          "Guardar perfil PDF",
+        extension:       "pdf",
+        contenido_b64:   b64,
+      },
     });
-
-    if (!ruta) return; // usuario canceló
-
-    const buffer = await blob.arrayBuffer();
-    await writeFile(ruta, new Uint8Array(buffer));
     return;
   }
 

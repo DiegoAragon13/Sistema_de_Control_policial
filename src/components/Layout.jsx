@@ -31,7 +31,7 @@ function Layout({ onLogout, sesion }) {
     if (location.pathname.startsWith("/personal/")) return "Ficha de Personal";
     if (location.pathname === "/agregar") return "Nuevo Registro";
     if (location.pathname === "/importar") return "Importar Datos";
-    return "Sistema de Control de Personal";
+    return "Dirección Municipal de Seguridad Pública";
   };
 
   return (
@@ -42,8 +42,8 @@ function Layout({ onLogout, sesion }) {
             <Shield size={24} aria-hidden="true" />
           </div>
           <div className="sidebar-brand">
-            <span className="sidebar-title">SICOP</span>
-            <span className="sidebar-subtitle">Seguridad Pública</span>
+            <span className="sidebar-title">DIRECCIÓN</span>
+            <span className="sidebar-subtitle">Seguridad Pública Municipal</span>
           </div>
         </div>
         <nav className="sidebar-nav">
@@ -76,7 +76,7 @@ function Layout({ onLogout, sesion }) {
             </div>
           </div>
         </header>
-        <main className="main-content">
+        <main className="main-content" role="main">
           <Outlet />
         </main>
       </div>

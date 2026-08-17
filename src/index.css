@@ -1784,3 +1784,53 @@ body {
   gap: 24px;
   margin-bottom: 28px;
 }
+
+/* ===========================
+   AVATAR CON FOTO
+   =========================== */
+.table-avatar .avatar-img,
+.recent-avatar .avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+/* Asegurar que los avatares que tienen foto no muestren fondo */
+.table-avatar:has(.avatar-img),
+.recent-avatar:has(.avatar-img) {
+  background: none;
+  padding: 0;
+}
+
+/* ===========================
+   VALIDACIÓN DE FORMULARIOS
+   =========================== */
+
+/* Asterisco rojo para campos obligatorios */
+.label-required {
+  color: var(--rojo);
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+/* Campo con error — borde rojo */
+.form-group-error input,
+.form-group-error select {
+  border-color: var(--rojo) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08) !important;
+}
+
+.form-group-error label {
+  color: #991b1b !important;
+}
+
+/* Mensaje de error debajo del campo */
+.field-error {
+  font-size: 0.76rem;
+  color: #dc2626;
+  font-weight: 500;
+  margin-top: 3px;
+  display: block;
+}

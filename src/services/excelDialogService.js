@@ -1,39 +1,53 @@
 /**
  * excelDialogService.js
- * Utilidad compartida para guardar archivos .xlsx con diálogo nativo.
+ * Guarda un workbook xlsx usando el diálogo nativo del OS.
  *
- * En Tauri: abre el diálogo de "Guardar como" del sistema operativo.
- * En browser: descarga directamente (fallback para desarrollo).
+ * En Tauri: llama al comando Rust cmd_guardar_archivo que abre
+ *           el diálogo nativo y escribe el archivo.
+ * En browser: descarga directamente (fallback desarrollo).
  */
+
+import { invoke } from "./tauriInvoke";
 
 /**
- * Guarda un workbook xlsx mostrando el diálogo nativo de guardar.
- * @param {Object} wb - Workbook de SheetJS
- * @param {string} nombreSugerido - Nombre de archivo por defecto
- * @param {string} titulo - Título del diálogo
+ * @param {Object} wb            - Workbook de SheetJS
+ * @param {string} nombreSugerido - Nombre por defecto en el diálogo
+ * @param {string} titulo         - Título del diálogo
  */
 export async function guardarExcel(wb, nombreSugerido, titulo = "Guardar archivo") {
-  const XLSX = (await import("xlsx")).default || (await import("xlsx"));
+  const XLSX = (await import("xlsx"));
 
-  // ── Tauri: diálogo nativo del OS ──
+  // Generar el buffer del xlsx
+  const buffer = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+  const uint8  = new Uint8Array(buffer);
+
+  // Convertir a base64 para pasarlo al backend Rust
+  const b64 = uint8ToBase64(uint8);
+
   if (typeof window !== "undefined" && window.__TAURI_INTERNALS__) {
-    const { save }      = await import("@tauri-apps/plugin-dialog");
-    const { writeFile } = await import("@tauri-apps/plugin-fs");
-
-    const ruta = await save({
-      title: titulo,
-      defaultPath: nombreSugerido,
-      filters: [{ name: "Excel", extensions: ["xlsx"] }],
+    // Rust abre el diálogo y escribe el archivo
+    await invoke("cmd_guardar_archivo", {
+      input: {
+        nombre_sugerido: nombreSugerido,
+        titulo,
+        extension: "xlsx",
+        contenido_b64: b64,
+      },
     });
-
-    if (!ruta) return; // usuario canceló
-
-    // Generar el buffer del xlsx
-    const buffer = XLSX.write(wb, { type: "array", bookType: "xlsx" });
-    await writeFile(ruta, new Uint8Array(buffer));
     return;
   }
 
-  // ── Browser fallback (npm run dev sin Tauri) ──
+  // Browser fallback
   XLSX.writeFile(wb, nombreSugerido);
+}
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+function uint8ToBase64(uint8) {
+  let binary = "";
+  const len  = uint8.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(uint8[i]);
+  }
+  return btoa(binary);
 }

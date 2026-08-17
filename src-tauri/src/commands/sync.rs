@@ -7,7 +7,7 @@ use aes_gcm::aead::rand_core::RngCore;
 use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
 use chrono::Local;
 use serde::{Deserialize, Serialize};
-use std::{fs, io::Read, path::PathBuf};
+use std::{fs, io::Read};
 use tauri::State;
 
 use crate::AppState;
@@ -27,13 +27,14 @@ struct SicopHeader {
 }
 
 /// Exporta la DB cifrada como archivo .sicop
-/// Retorna la ruta del archivo generado
+/// Abre diálogo nativo de guardar y retorna la ruta del archivo generado
 #[tauri::command]
 pub fn cmd_exportar_sicop(
-    ruta_destino: String,
     app: tauri::AppHandle,
     state: State<AppState>,
-) -> Result<String, String> {
+) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+
     let conn = state.db.lock().map_err(|e| e.to_string())?;
 
     // Obtener versión actual
@@ -89,13 +90,26 @@ pub fn cmd_exportar_sicop(
     output.extend_from_slice(&header_json);
     output.extend_from_slice(&ciphertext);
 
-    // Escribir archivo
-    let nombre = format!("sicop_v{}_{}.sicop", version_db, &fecha[..10]);
-    let destino = PathBuf::from(&ruta_destino).join(&nombre);
+    // Abrir diálogo nativo de guardar
+    let nombre_sugerido = format!("sicop_v{}_{}.sicop", version_db, &fecha[..10]);
+
+    let ruta = app
+        .dialog()
+        .file()
+        .set_title("Guardar archivo .sicop para móvil")
+        .set_file_name(&nombre_sugerido)
+        .add_filter("SICOP", &["sicop"])
+        .blocking_save_file();
+
+    let destino = match ruta {
+        Some(r) => r.into_path().map_err(|e| format!("Ruta inválida: {}", e))?,
+        None => return Ok(None), // usuario canceló
+    };
+
     fs::write(&destino, &output)
         .map_err(|e| format!("No se pudo escribir el archivo: {}", e))?;
 
-    Ok(destino.to_string_lossy().to_string())
+    Ok(Some(destino.to_string_lossy().to_string()))
 }
 
 /// Obtiene la info de versión de la DB actual

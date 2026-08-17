@@ -1,12 +1,14 @@
-import { useState, useMemo, useEffect } from "react";
-import { Users, Shield, TrafficCone, CalendarPlus } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Users, Shield, TrafficCone, CalendarPlus, Share2 } from "lucide-react";
 import * as personalService from "../services/personalService";
+import { invoke } from "../lib/tauri";
 
 function Dashboard() {
   const [personal, setPersonal] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState(null);
   const [hovered, setHovered]   = useState(null);
+  const [exportandoSicop, setExportandoSicop] = useState(false);
 
   useEffect(() => {
     personalService.getAll()
@@ -14,6 +16,23 @@ function Dashboard() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
+
+  // Exportar DB cifrada para la app móvil
+  const handleExportarSicop = useCallback(async () => {
+    if (exportandoSicop) return;
+    setExportandoSicop(true);
+    try {
+      // Pedir carpeta destino via el comando de archivos
+      const resultado = await invoke("cmd_exportar_sicop", { rutaDestino: "" });
+      if (resultado) {
+        alert(`Archivo generado correctamente:\n${resultado}`);
+      }
+    } catch (e) {
+      alert("Error al exportar: " + (e.message || e));
+    } finally {
+      setExportandoSicop(false);
+    }
+  }, [exportandoSicop]);
 
   // Solo contar elementos ACTIVOS en todas las métricas del dashboard
   const activos         = useMemo(() => personal.filter((p) => p.activo !== false), [personal]);
@@ -61,7 +80,13 @@ function Dashboard() {
 
   return (
     <div className="dashboard">
-      <h1 className="page-title">Panel de Control</h1>
+      <div className="page-header-row">
+        <h1 className="page-title">Panel de Control</h1>
+        <button className="btn-secondary" onClick={handleExportarSicop} disabled={exportandoSicop}>
+          {exportandoSicop ? <span className="spinner-export"></span> : <Share2 size={16} aria-hidden="true" />}
+          {exportandoSicop ? "Exportando..." : "Compartir DB (.sicop)"}
+        </button>
+      </div>
 
       <div className="stats-grid">
         <div className="stat-card">
@@ -114,7 +139,10 @@ function Dashboard() {
               {recientes.map((p) => (
                 <div key={p.id} className="recent-item">
                   <div className="recent-avatar">
-                    {p.nombre.charAt(0)}{p.apellidos.charAt(0)}
+                    {p.foto
+                      ? <img src={`data:image/jpeg;base64,${p.foto}`} alt="" className="avatar-img" />
+                      : <>{p.nombre.charAt(0)}{p.apellidos.charAt(0)}</>
+                    }
                   </div>
                   <div className="recent-info">
                     <span className="recent-name">{p.nombre} {p.apellidos}</span>

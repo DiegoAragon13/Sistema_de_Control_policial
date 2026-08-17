@@ -12,12 +12,38 @@ const initialForm = {
   fecha_ingreso: "", numero_empleado: "",
 };
 
+// Campos obligatorios con su label para mostrar en error
+const OBLIGATORIOS = [
+  { campo: "nombre",            label: "Nombre" },
+  { campo: "apellidos",         label: "Apellidos" },
+  { campo: "numero_empleado",   label: "Número de Empleado" },
+  { campo: "categoria",         label: "Categoría" },
+  { campo: "fecha_nacimiento",  label: "Fecha de Nacimiento" },
+  { campo: "tipo_sangre",       label: "Tipo de Sangre" },
+  { campo: "fecha_ingreso",     label: "Fecha de Ingreso" },
+  { campo: "clave_ine",         label: "Clave de INE" },
+  { campo: "licencia_conducir", label: "Licencia de Conducir" },
+];
+
+// Validaciones de formato (longitud y patrón)
+const VALIDACIONES_FORMATO = {
+  telefono:            { longitud: 10, label: "Teléfono", mensaje: "Debe tener 10 dígitos", opcional: true },
+  telefono_emergencia: { longitud: 10, label: "Tel. Emergencia", mensaje: "Debe tener 10 dígitos", opcional: true },
+};
+
 function AgregarPersona() {
   const navigate = useNavigate();
   const [form, setForm]               = useState(initialForm);
   const [fotoPreview, setFotoPreview] = useState(null);
+  const [erroresValidacion, setErroresValidacion] = useState({});
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    // Limpiar error de ese campo al escribir
+    if (erroresValidacion[e.target.name]) {
+      setErroresValidacion({ ...erroresValidacion, [e.target.name]: null });
+    }
+  };
 
   const handleFoto = (e) => {
     const file = e.target.files[0];
@@ -25,6 +51,31 @@ function AgregarPersona() {
     const reader = new FileReader();
     reader.onloadend = () => setFotoPreview(reader.result);
     reader.readAsDataURL(file);
+  };
+
+  // Validar antes de enviar
+  const validar = () => {
+    const errores = {};
+
+    // 1. Campos obligatorios vacíos
+    for (const { campo, label } of OBLIGATORIOS) {
+      if (!form[campo] || !form[campo].trim()) {
+        errores[campo] = `${label} es obligatorio`;
+      }
+    }
+
+    // 2. Validaciones de formato (longitud)
+    for (const [campo, regla] of Object.entries(VALIDACIONES_FORMATO)) {
+      const valor = (form[campo] || "").replace(/[\s\-]/g, ""); // quitar espacios y guiones
+      if (!valor && regla.opcional) continue; // si es opcional y vacío, skip
+      if (!valor && !regla.opcional) continue; // si obligatorio y vacío, ya lo capturó arriba
+      if (valor && valor.length !== regla.longitud) {
+        errores[campo] = regla.mensaje;
+      }
+    }
+
+    setErroresValidacion(errores);
+    return Object.keys(errores).length === 0;
   };
 
   const submitHandler = useCallback(async (data) => {
@@ -38,7 +89,14 @@ function AgregarPersona() {
     onSuccess: () => navigate("/personal"),
   });
 
-  const onGuardar = (e) => { e.preventDefault(); handleSubmit(form); };
+  const onGuardar = (e) => {
+    e.preventDefault();
+    if (!validar()) return;
+    handleSubmit(form);
+  };
+
+  const tieneError = (campo) => !!erroresValidacion[campo];
+  const esObligatorio = (campo) => OBLIGATORIOS.some((o) => o.campo === campo);
 
   return (
     <div className="ficha-page">
@@ -52,6 +110,12 @@ function AgregarPersona() {
       </div>
 
       {saveError && <div role="alert" className="alert-error">{saveError}</div>}
+
+      {Object.keys(erroresValidacion).length > 0 && (
+        <div role="alert" className="alert-error">
+          Completa los campos obligatorios marcados en rojo.
+        </div>
+      )}
 
       <div className="ficha-content">
         <div className="ficha-sidebar">
@@ -73,25 +137,36 @@ function AgregarPersona() {
             <h3>Datos Personales</h3>
             <div className="form-grid">
               {[
-                { id: "nombre",              label: "Nombre",               placeholder: "Nombre(s)" },
-                { id: "apellidos",           label: "Apellidos",            placeholder: "Apellido Paterno Materno" },
-                { id: "fecha_nacimiento",    label: "Fecha de Nacimiento",  type: "date" },
-                { id: "direccion",           label: "Dirección",            placeholder: "Calle, número, colonia" },
-                { id: "telefono",            label: "Teléfono",             placeholder: "614-000-0000" },
+                { id: "nombre",              label: "Nombre",                placeholder: "Nombre(s)" },
+                { id: "apellidos",           label: "Apellidos",             placeholder: "Apellido Paterno Materno" },
+                { id: "fecha_nacimiento",    label: "Fecha de Nacimiento",   type: "date" },
+                { id: "direccion",           label: "Dirección",             placeholder: "Calle, número, colonia" },
+                { id: "telefono",            label: "Teléfono",              placeholder: "614-000-0000" },
                 { id: "telefono_emergencia", label: "Teléfono de Emergencia", placeholder: "614-000-0000" },
-                { id: "escolaridad",         label: "Escolaridad",          placeholder: "Nivel de estudios" },
+                { id: "escolaridad",         label: "Escolaridad",           placeholder: "Nivel de estudios" },
               ].map(({ id: field, label, type = "text", placeholder }) => (
-                <div key={field} className="form-group">
-                  <label htmlFor={`add-${field}`}>{label}</label>
+                <div key={field} className={`form-group ${tieneError(field) ? "form-group-error" : ""}`}>
+                  <label htmlFor={`add-${field}`}>
+                    {label} {esObligatorio(field) && <span className="label-required">*</span>}
+                  </label>
                   <input id={`add-${field}`} type={type} name={field}
-                    value={form[field]} onChange={handleChange} placeholder={placeholder} />
+                    value={form[field]} onChange={handleChange} placeholder={placeholder}
+                    aria-invalid={tieneError(field)}
+                    aria-describedby={tieneError(field) ? `err-${field}` : undefined} />
+                  {tieneError(field) && (
+                    <span id={`err-${field}`} className="field-error">{erroresValidacion[field]}</span>
+                  )}
                 </div>
               ))}
-              <div className="form-group">
-                <label htmlFor="add-tipo_sangre">Tipo de Sangre</label>
-                <select id="add-tipo_sangre" name="tipo_sangre" value={form.tipo_sangre} onChange={handleChange}>
+              <div className={`form-group ${tieneError("tipo_sangre") ? "form-group-error" : ""}`}>
+                <label htmlFor="add-tipo_sangre">Tipo de Sangre <span className="label-required">*</span></label>
+                <select id="add-tipo_sangre" name="tipo_sangre" value={form.tipo_sangre} onChange={handleChange}
+                  aria-invalid={tieneError("tipo_sangre")}>
                   {["O+","O-","A+","A-","B+","B-","AB+","AB-"].map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
+                {tieneError("tipo_sangre") && (
+                  <span className="field-error">{erroresValidacion.tipo_sangre}</span>
+                )}
               </div>
             </div>
           </div>
@@ -99,21 +174,33 @@ function AgregarPersona() {
           <div className="form-section">
             <h3>Datos Laborales</h3>
             <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="add-categoria">Categoría</label>
-                <select id="add-categoria" name="categoria" value={form.categoria} onChange={handleChange}>
+              <div className={`form-group ${tieneError("categoria") ? "form-group-error" : ""}`}>
+                <label htmlFor="add-categoria">Categoría <span className="label-required">*</span></label>
+                <select id="add-categoria" name="categoria" value={form.categoria} onChange={handleChange}
+                  aria-invalid={tieneError("categoria")}>
                   <option value="Preventiva">Preventiva</option>
                   <option value="Vial">Vial</option>
                 </select>
+                {tieneError("categoria") && (
+                  <span className="field-error">{erroresValidacion.categoria}</span>
+                )}
               </div>
-              <div className="form-group">
-                <label htmlFor="add-fecha_ingreso">Fecha de Ingreso</label>
-                <input id="add-fecha_ingreso" type="date" name="fecha_ingreso" value={form.fecha_ingreso} onChange={handleChange} />
+              <div className={`form-group ${tieneError("fecha_ingreso") ? "form-group-error" : ""}`}>
+                <label htmlFor="add-fecha_ingreso">Fecha de Ingreso <span className="label-required">*</span></label>
+                <input id="add-fecha_ingreso" type="date" name="fecha_ingreso" value={form.fecha_ingreso}
+                  onChange={handleChange} aria-invalid={tieneError("fecha_ingreso")} />
+                {tieneError("fecha_ingreso") && (
+                  <span className="field-error">{erroresValidacion.fecha_ingreso}</span>
+                )}
               </div>
-              <div className="form-group">
-                <label htmlFor="add-numero_empleado">Número de Empleado</label>
+              <div className={`form-group ${tieneError("numero_empleado") ? "form-group-error" : ""}`}>
+                <label htmlFor="add-numero_empleado">Número de Empleado <span className="label-required">*</span></label>
                 <input id="add-numero_empleado" name="numero_empleado" value={form.numero_empleado}
-                  onChange={handleChange} placeholder="POL-0000 o VIA-0000" />
+                  onChange={handleChange} placeholder="POL-0000 o VIA-0000"
+                  aria-invalid={tieneError("numero_empleado")} />
+                {tieneError("numero_empleado") && (
+                  <span className="field-error">{erroresValidacion.numero_empleado}</span>
+                )}
               </div>
             </div>
           </div>
@@ -122,15 +209,22 @@ function AgregarPersona() {
             <h3>Documentos de Identidad</h3>
             <div className="form-grid">
               {[
-                { id: "rfc",               label: "RFC",                         placeholder: "RFC con homoclave" },
-                { id: "curp",              label: "CURP",                        placeholder: "18 caracteres" },
-                { id: "clave_ine",         label: "Clave de INE",                placeholder: "Clave de elector" },
-                { id: "licencia_conducir", label: "Núm. Licencia de Conducir",   placeholder: "Número de licencia" },
+                { id: "rfc",               label: "RFC",                       placeholder: "RFC con homoclave" },
+                { id: "curp",              label: "CURP",                      placeholder: "18 caracteres" },
+                { id: "clave_ine",         label: "Clave de INE",              placeholder: "Clave de elector" },
+                { id: "licencia_conducir", label: "Núm. Licencia de Conducir", placeholder: "Número de licencia" },
               ].map(({ id: field, label, placeholder }) => (
-                <div key={field} className="form-group">
-                  <label htmlFor={`add-${field}`}>{label}</label>
+                <div key={field} className={`form-group ${tieneError(field) ? "form-group-error" : ""}`}>
+                  <label htmlFor={`add-${field}`}>
+                    {label} {esObligatorio(field) && <span className="label-required">*</span>}
+                  </label>
                   <input id={`add-${field}`} name={field} value={form[field]}
-                    onChange={handleChange} placeholder={placeholder} />
+                    onChange={handleChange} placeholder={placeholder}
+                    aria-invalid={tieneError(field)}
+                    aria-describedby={tieneError(field) ? `err-${field}` : undefined} />
+                  {tieneError(field) && (
+                    <span id={`err-${field}`} className="field-error">{erroresValidacion[field]}</span>
+                  )}
                 </div>
               ))}
               <div className="form-group">
