@@ -130,24 +130,19 @@ const s = StyleSheet.create({
   badge: {
     paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: 20,
     fontSize: 8,
     fontFamily: "Helvetica-Bold",
   },
   badgePreventiva: {
-    backgroundColor: "rgba(17,24,68,0.08)",
     color: AZUL_OSCURO,
   },
   badgeVial: {
-    backgroundColor: "rgba(114,136,174,0.15)",
     color: AZUL_CLARO,
   },
   badgeActivo: {
-    backgroundColor: "rgba(16,185,129,0.1)",
     color: "#065f46",
   },
   badgeBaja: {
-    backgroundColor: "rgba(239,68,68,0.1)",
     color: "#991b1b",
   },
 

@@ -20,12 +20,19 @@ function Dashboard() {
   // Exportar DB cifrada para la app móvil
   const handleExportarSicop = useCallback(async () => {
     if (exportandoSicop) return;
+
+    // Pedir contraseña para cifrar
+    const password = prompt("Escribe una contraseña para cifrar el archivo.\nLa necesitarás para abrirlo en el celular:");
+    if (!password || password.length < 4) {
+      alert("La contraseña debe tener al menos 4 caracteres.");
+      return;
+    }
+
     setExportandoSicop(true);
     try {
-      // Pedir carpeta destino via el comando de archivos
-      const resultado = await invoke("cmd_exportar_sicop", { rutaDestino: "" });
+      const resultado = await invoke("cmd_exportar_sicop", { password });
       if (resultado) {
-        alert(`Archivo generado correctamente:\n${resultado}`);
+        alert(`Archivo cifrado generado:\n${resultado}`);
       }
     } catch (e) {
       alert("Error al exportar: " + (e.message || e));

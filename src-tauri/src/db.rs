@@ -3,6 +3,7 @@ use rusqlite::{Connection, Result, params};
 use std::fs;
 use tauri::Manager;
 use bcrypt;
+use log;
 
 pub fn get_db_path(app: &tauri::AppHandle) -> std::path::PathBuf {
     let data_dir = app
@@ -35,29 +36,26 @@ pub fn init_db(path: &std::path::Path) -> Result<Connection> {
     Ok(conn)
 }
 
-/// Asegura que exista el usuario admin con un hash bcrypt verificable.
-/// Intenta verificar la contraseña por defecto — si falla, regenera el hash.
+/// Asegura que exista al menos un usuario admin funcional.
+/// Si no hay usuarios O si el admin no puede autenticarse con Admin1234!, lo recrea.
 fn seed_admin(conn: &Connection) {
-    let hash_actual: Option<String> = conn.query_row(
-        "SELECT password_hash FROM usuarios WHERE id = 1",
+    // Verificar si existe el usuario admin
+    let admin_exists: bool = conn.query_row(
+        "SELECT COUNT(*) FROM usuarios WHERE username = 'admin'",
         [],
-        |r| r.get::<_, String>(0),
-    ).ok();
+        |r| r.get::<_, i64>(0),
+    ).unwrap_or(0) > 0;
 
-    let necesita_rehash = match hash_actual {
-        None => true,
-        Some(ref h) => {
-            // Verificar que el hash realmente valida la contraseña por defecto
-            !bcrypt::verify("Admin1234!", h).unwrap_or(false)
-        }
-    };
-
-    if necesita_rehash {
-        if let Ok(nuevo_hash) = bcrypt::hash("Admin1234!", 10) {
-            conn.execute(
-                "UPDATE usuarios SET password_hash = ?1 WHERE id = 1",
-                params![nuevo_hash],
-            ).ok();
-        }
+    if !admin_exists {
+        // No existe — crear desde cero
+        let hash = bcrypt::hash("Admin1234!", 10).expect("Error generando hash bcrypt");
+        conn.execute(
+            "INSERT INTO usuarios (username, password_hash, nombre, rol)
+             VALUES ('admin', ?1, 'Administrador', 'admin')",
+            params![hash],
+        ).expect("Error insertando admin");
+        log::info!("[SICOP] Usuario admin creado con contraseña por defecto.");
+    } else {
+        log::info!("[SICOP] Usuario admin ya existe, no se modifica.");
     }
 }

@@ -253,7 +253,15 @@ export async function parsearExcel(archivo) {
     // Leer cada campo por posición de columna
     const get = (colOffset) => {
       const val = row.getCell(DATOS_START + colOffset).value;
-      return val === null || val === undefined ? "" : String(val).trim();
+      if (val === null || val === undefined) return "";
+      // Si Excel devuelve un Date object, convertir a YYYY-MM-DD
+      if (val instanceof Date) {
+        const y = val.getFullYear();
+        const m = String(val.getMonth() + 1).padStart(2, "0");
+        const d = String(val.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+      return String(val).trim();
     };
 
     const obj = {};
